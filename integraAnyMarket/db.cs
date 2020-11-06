@@ -20,6 +20,8 @@ namespace integraAnyMarket
     {
         public string Codigo { get; set; }
         public string Descricao { get; set; }
+
+        public string Endereco { get; set; }
     }
 
     public class Db
