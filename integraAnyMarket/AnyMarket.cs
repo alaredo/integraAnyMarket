@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,7 +12,7 @@ namespace integraAnyMarket
 {
     public class AnyMarket
     {
-        public RootObject GetCategories()
+        /*public RootObject GetCategories()
         {
             RootObject root = new RootObject();
             var url = "http://sandbox-api.anymarket.com.br/v2/categories";
@@ -36,6 +37,7 @@ namespace integraAnyMarket
             }
             return root;
         }
+        */
 
         public RootProduto GetProdutos()
         {
@@ -87,6 +89,35 @@ namespace integraAnyMarket
                 string message = ex.Message;
             }
             return root;
+        }
+
+        public void SetStock(List<SetStock> lstSetStock)
+        {
+            //foreach (SetStock setStock in lstSetStock)
+            //{
+                var url = "http://sandbox-api.anymarket.com.br/v2/stocks?gumgaToken=L31103086G1570648571245R-250576705";
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "PUT";
+   
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    string json = JsonConvert.SerializeObject(lstSetStock);
+
+                    streamWriter.Write(json);
+                }
+                try
+                {
+                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                    using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                    {
+                        var result = streamReader.ReadToEnd();
+                    }
+                } catch ( Exception ex)
+                {
+                    string msg = ex.Message;
+                }
+            //}
         }
     }
 }

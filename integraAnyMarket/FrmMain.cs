@@ -118,12 +118,19 @@ namespace integraAnyMarket
             AnyMarket anyMarket = new AnyMarket();
             RootOrder root = anyMarket.GetPedidos();
 
+            foreach( Order order in root.produtos)
+            {
+                ErpBridge erpBridge = new ErpBridge();
+                erpBridge.processaPedido(order);
+            }
 
         }
 
         private void CmdProd3_Click(object sender, EventArgs e)
         {
             label3.Text = "Atualizar Estoque";
+            ErpBridge erpBridge = new ErpBridge();
+            erpBridge.processaEstoque();
         }
 
         private void Button3_Click(object sender, EventArgs e)

@@ -135,7 +135,7 @@ namespace integraAnyMarket
         {
             bool ret = true;
 
-            string queryString = Convert.ToString("SELECT a.id_Pessoa, a.ds_pessoa, b.cd_cpf, b.id_localidade FROM tb_Pessoa  a, tb_Fisicos  b WHERE a.id_Pessoa = b.id_Pessoa AND b.cd_cpf = ") + cpf;
+            string queryString = Convert.ToString("SELECT a.id_Pessoa, a.ds_pessoa, b.cd_cpf, b.id_localidade FROM tb_Pessoa  a, tb_Fisicos  b WHERE a.id_Pessoa = b.id_Pessoa AND b.cd_cpf = '") + cpf + "'";
             using (OracleConnection connection = new OracleConnection(connectionString))
             {
                 connection.Open();
@@ -146,7 +146,6 @@ namespace integraAnyMarket
                     if (reader.Read())
                     {
                         ret = true;
-
 
                         // Console.WriteLine(reader.GetInt32(0) + ", " + reader.GetString(1) + ", " + reader.GetString(2));
                         id_pessoa = reader.GetInt32(0);
@@ -239,7 +238,8 @@ namespace integraAnyMarket
                 connection.Open();
 
                 OracleCommand cmd = new OracleCommand();
-            
+
+                cmd.Connection = connection;
 
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.CommandText = "SP_COM_PFISICA_INS";
@@ -252,13 +252,13 @@ namespace integraAnyMarket
                 addParameter("P_TP_PESSOA", OracleType.VarChar, 1, "F", cmd);
                 addParameter("P_TP_COMERCIAL", OracleType.VarChar, 1, "C", cmd);
                 addParameter("P_USUARIO", OracleType.VarChar, 20, "PedidoWeb", cmd);
-                addParameter("P_ID_LOCALIDADE", OracleType.Double, 9, id_localidade, cmd);
+                addParameter("P_ID_LOCALIDADE", OracleType.Double, 9, 1, cmd);
                 addParameter("P_CD_RG", OracleType.VarChar, 20, rg, cmd);
                 addParameter("P_DT_EMISSAORG", OracleType.DateTime, 0, dtEmissao, cmd);
                 // dtEmissao.ToString("dd/MM/yyyy")
                 addParameter("P_CD_ORGAOEMISSORRG", OracleType.VarChar, 10, orgaoEmissor, cmd);
                 addParameter("P_CD_CPF", OracleType.VarChar, 11, cpf, cmd);
-                addParameter("P_DT_NASCIMENTO", OracleType.DateTime, 10, dtNascimento, cmd);
+                addParameter("P_DT_NASCIMENTO", OracleType.DateTime, 10, "", cmd);
                 // dtNascimento.ToString("dd/MM/yyyy")
                 addParameter("P_TP_SEXO", OracleType.VarChar, 1, sexo, cmd);
                 addParameter("P_DS_PAI", OracleType.VarChar, 80, pai, cmd);
@@ -315,6 +315,24 @@ namespace integraAnyMarket
 
             OracleString oracleStr = new OracleString();
             int tot = cmd.ExecuteNonQuery();
+        }
+
+        public void updateEndereco(int tipoEndereco, int id_localidade, string logradouro, string numero, string complemento, string bairro, string cep, OracleCommand cmd)
+        {
+            cmd.Parameters.Clear();
+            cmd.CommandText = "SP_COM_ENDERECO_UPD";
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            addParameter("P_ID_PESSOA", OracleType.Double, 9, id_pessoa, cmd);
+            addParameter("P_ID_TIPOENDERECO", OracleType.Double, 9, tipoEndereco, cmd);
+            addParameter("P_ID_LOCALIDADE", OracleType.Double, 9, id_localidade, cmd);
+            addParameter("P_DS_LOGRADOURO", OracleType.VarChar, 150, logradouro, cmd);
+            addParameter("P_DS_NUMERO", OracleType.VarChar, 15, numero, cmd);
+            addParameter("P_DS_COMPLEMENTO", OracleType.VarChar, 80, complemento, cmd);
+            addParameter("P_DS_BAIRRO", OracleType.VarChar, 80, bairro, cmd);
+            addParameter("P_CD_CEP", OracleType.VarChar, 8, cep, cmd);
+
+            cmd.ExecuteNonQuery();
         }
 
         public void insertEndereco(int tipoEndereco, int id_localidade, string logradouro, string numero, string complemento, string bairro, string cep, OracleCommand cmd)
@@ -422,9 +440,14 @@ namespace integraAnyMarket
 
             try
             {
+                if (CheckPed(order.marketPlaceNumber))
+                    throw new Exception("Ja existe um pedido cadastrado com este codigo - " + order.marketPlaceNumber);
 
                 Shipping entrega = order.shipping;
-                Billingaddress cobranca = order.billingAddress;
+                if (entrega.comment == null)
+                    entrega.comment = "";
+
+                Anymarketaddress cobranca = order.anymarketAddress;
 
                 BuscaVendedor(order);
                 if (id_vendedor == "755873") {
@@ -433,14 +456,14 @@ namespace integraAnyMarket
                     order.marketPlaceNumber = "0" + order.marketPlaceNumber.Substring(0, 1) + "-" + order.marketPlaceNumber.Substring(1, length - 2);
                 }
 
-                if (CheckPed(order.marketPlaceNumber))
-                    throw new Exception("Ja existe um pedido cadastrado com este codigo - " + order.marketPlaceNumber);
-
                 if ((order.buyer.documentType == "CPF"))
                 {
                     if (CheckPF(order.buyer.document))
                     {
                         id_localidade = GetIdLocalidade(order.shipping.city, order.shipping.state);
+
+                        updateEndereco(2, id_localidade, entrega.street, entrega.number, entrega.comment, entrega.neighborhood, entrega.zipCode, cmd);
+                        //insertEndereco(2, id_localidade, entrega.street, entrega.number, entrega.comment, entrega.neighborhood, entrega.zipCode, cmd);
                         updateClientes(cmd);
                     }
                     else
@@ -456,7 +479,7 @@ namespace integraAnyMarket
                         InsertPF(order.buyer.name, order.buyer.document, DateTime.Now, "", order.buyer.document, DateTime.Now, strSexo, " ", " ", order.buyer.phone, order.buyer.cellPhone);
 
                         id_localidade = GetIdLocalidade(entrega.city, entrega.state);
-                        insertEndereco(2, id_localidade, entrega.street, entrega.number, entrega.comment, entrega.neighborhood, entrega.zipCode, cmd);
+                        insertEndereco(2, id_localidade, entrega.street, entrega.number, entrega.address, entrega.neighborhood, entrega.zipCode, cmd);
 
                         //id_localidade = GetIdLocalidade(cobranca.city, cobranca.state);
                        // insertEndereco(2, id_localidade, cobranca.street, cobranca.number, cobranca.comment, cobranca.neighborhood, cobranca.zipCode, cmd);
@@ -469,6 +492,7 @@ namespace integraAnyMarket
                 else if (CheckPJ(order.buyer.document))
                 {
                     id_localidade = GetIdLocalidade(entrega.city, entrega.state);
+
                     updateClientes(cmd);
                 }
                 else
@@ -483,7 +507,7 @@ namespace integraAnyMarket
 
                     insertPJ(order.buyer.name, 0, 1, order.buyer.document, "", "", order.buyer.name, DateTime.Now, order.buyer.phone, order.buyer.cellPhone);
 
-                    insertEndereco(1, id_localidade, entrega.street, entrega.number, entrega.comment, entrega.neighborhood, entrega.zipCode, cmd);
+                    insertEndereco(1, id_localidade, entrega.street, entrega.number, entrega.address, entrega.neighborhood, entrega.zipCode, cmd);
                     BuscaVendedor(order);
 
                     insertClientes(cmd);
@@ -502,7 +526,7 @@ namespace integraAnyMarket
             }
             catch (Exception ex)
             {
-                //myTrans.Rollback();
+                myTrans.Rollback();
                 //order.statusSiad = "Erro";
                 //Form1.SaveOrderFile(order);
                 //retorno = false;
@@ -514,6 +538,8 @@ namespace integraAnyMarket
             }
             return retorno;
         }
+
+
 
 
         public string Ver_UFF(String ssU) {
@@ -633,6 +659,15 @@ namespace integraAnyMarket
                 id_marketPlace = "2";
             }
 
+            if ((channel == "ECOMMERCE"))
+            {
+                achou = true;
+                id_vendedor = "1552768";
+                id_transportadora = "193064";
+                id_revenda = "1552769";
+                id_marketPlace = "3";
+            }
+
             if ((channel == "NETSHOES"))
             {
                 achou = true;
@@ -691,7 +726,7 @@ namespace integraAnyMarket
         {
             Buyer cliente = pedido.buyer;
             Shipping entrega = pedido.shipping;
-            Billingaddress cobranca = pedido.billingAddress;
+            Anymarketaddress cobranca = pedido.anymarketAddress;
 
             PedidoBd pedidoBel = new PedidoBd();
             pedidoBel.empresa = 1;
@@ -726,7 +761,7 @@ namespace integraAnyMarket
             pedidoBel.tipo_endereco = "Entrega";
             pedidoBel.ds_logradouro = entrega.street;
             pedidoBel.ds_numero = entrega.number;
-            pedidoBel.ds_complemento = entrega.comment;
+            pedidoBel.ds_complemento = entrega.address;
             pedidoBel.ds_bairro = entrega.state;
             pedidoBel.cd_CEP = entrega.zipCode;
             pedidoBel.vl_total = pedido.total;
@@ -823,6 +858,10 @@ namespace integraAnyMarket
 
             pedidoBel.cd_agrupa = p_aux.Descricao + " " + p_aux.Codigo;
             pedidoBel.id_Any = pedido.id.ToString();
+            pedidoBel.id_marketplace = id_marketPlace;
+            pedidoBel.vl_fretePF = 0;
+            pedidoBel.cd_pedorg2 = pedido.subChannel;
+
 
             return pedidoBel.insertPedido(cmd);
         }
@@ -904,6 +943,30 @@ namespace integraAnyMarket
             return dataTable;
         }
 
+        public void Execute(string query, OracleCommand cmd)
+        {
+            DataTable dataTable = new DataTable();
+            try
+            {
+                string queryString = query;
+
+                using (OracleConnection connection = new OracleConnection(connectionString))
+                {
+                    connection.Open();
+
+                    OracleCommand command = new OracleCommand(queryString, connection);
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                string message = ex.Message;
+
+            }
+           
+        }
+
         public Prod_aux buscaProdutoCodigo(string sku )
         {
             Prod_aux prod = new Prod_aux();
@@ -932,9 +995,13 @@ namespace integraAnyMarket
             return prod;
         }
 
-        
-
-
+        public DataTable LoadStock ( )
+        {
+            string strQuery = "SELECT id_apisd, id_sku, qt_prod, status FROM tb_apisdprod";
+            DataTable dataTable = Load(strQuery);
+            return dataTable;
+        }
+    
         /*
    
         public void SaveOrderFileOk(Order order)
@@ -948,12 +1015,9 @@ namespace integraAnyMarket
                 if ((My.Computer.FileSystem.FileExists(".//Importados//" + order.code + ".ord")))
                     My.Computer.FileSystem.DeleteFile(@".\Importados\" + order.code + ".ord");
 
-
                 System.IO.StreamWriter file;
                 file = My.Computer.FileSystem.OpenTextFileWriter(@".\Importados\" + order.code + ".ord", true);
-
                 file.WriteLine(strProd);
-
                 file.Close();
             }
             catch (Exception ex)

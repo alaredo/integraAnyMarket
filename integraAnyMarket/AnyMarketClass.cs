@@ -6,14 +6,6 @@ using System.Threading.Tasks;
 
 namespace integraAnyMarket
 {
-    public class Link
-    {
-        public string rel { get; set; }
-        public string href { get; set; }
-    }
-
-
-
     public class Category
     {
         public int id { get; set; }
@@ -41,6 +33,7 @@ namespace integraAnyMarket
         public string description { get; set; }
     }
 
+
     public class Characteristic
     {
         public int index { get; set; }
@@ -60,16 +53,7 @@ namespace integraAnyMarket
         public string status { get; set; }
     }
 
-    public class Sku
-    {
-        public int id { get; set; }
-        public string title { get; set; }
-        public string partnerId { get; set; }
-        public double price { get; set; }
-        public double sellPrice { get; set; }
-        public int amount { get; set; }
-    }
-
+    
     public class Produto
     {
         public int id { get; set; }
@@ -105,13 +89,7 @@ namespace integraAnyMarket
         public string definitionPriceScope { get; set; }
     }
 
-    public class Page
-    {
-        public int size { get; set; }
-        public int totalElements { get; set; }
-        public int totalPages { get; set; }
-    }
-
+    
     public class RootObject
     {
         public List<Link> links { get; set; }
@@ -126,12 +104,12 @@ namespace integraAnyMarket
         public Page page { get; set; }
     }
 
-    public class RootOrder
+    
+    public class SetStock
     {
-        public List<Link> links { get; set; }
-        public List<Order> pedidos { get; set; }
-        public Page page { get; set; }
+        public string idOrigem { get; set; }
+        public string partnerId { get; set; }
+        public string quantity { get; set; }
     }
-
 
 }

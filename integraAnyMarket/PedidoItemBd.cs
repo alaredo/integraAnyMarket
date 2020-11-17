@@ -33,7 +33,7 @@ namespace integraAnyMarket
             cmd.Parameters.Add(retval);
             addParameter("P_ID_PEDIDO", OracleType.VarChar, 9, id_pedido, cmd);
             addParameter("P_ID_PRODUTO", OracleType.VarChar, 30, id_produto, cmd);
-            // addParameter("P_CD_EZ", OracleType.VarChar, 10, cd_ez, cmd)
+            addParameter("P_ID_EMPRESA", OracleType.Double, 2, 1, cmd);
             addParameter("P_DS_PRODUTO", OracleType.VarChar, 200, ds_produto, cmd);
             addParameter("P_DS_UNIDADE", OracleType.VarChar, 3, ds_unidade, cmd);
             addParameter("P_QT_PEDIDA", OracleType.VarChar, 9, qt_pedida, cmd);
@@ -73,23 +73,13 @@ namespace integraAnyMarket
             addParameter("P_VL_ICMSREM", OracleType.Double, 1, 0, cmd);
             addParameter("P_VL_ICMSFCP", OracleType.Double, 1, 0, cmd);
             addParameter("P_VL_OD", OracleType.Double, 1, 0, cmd);
-            addParameter("P_CD_CHECK", OracleType.Double, 1, 1, cmd);
-            addParameter("p_cd_CEST", OracleType.Double, 7, 0, cmd);
-            addParameter("p_VL_BASEICMSDEST", OracleType.Double, 15, 0, cmd);
-            addParameter("p_VL_ALICMSINTDEST", OracleType.Double, 7, 0, cmd);
-            addParameter("p_VL_ALICMSINTER", OracleType.Double, 7, 0, cmd);
-            addParameter("p_VL_ALICMSPART", OracleType.Double, 7, 0, cmd);
-            addParameter("p_VL_ALICMSFCP", OracleType.Double, 7, 0, cmd);
-            addParameter("p_VL_ICMSDEST", OracleType.Double, 15, 0, cmd);
-            addParameter("p_VL_ICMSREM", OracleType.Double, 15, 0, cmd);
-            addParameter("p_VL_ICMSFCP", OracleType.Double, 15, 0, cmd);
-            addParameter("p_VL_OD", OracleType.Double, 7, 0, cmd);
-            addParameter("p_cd_Produto", OracleType.VarChar, 1, vl_frete, cmd);
-
+            addParameter("P_CD_PRODUTO", OracleType.VarChar, 20, cd_produto, cmd);
 
             cmd.ExecuteNonQuery();
             id_ps02 = Convert.ToInt32(retval.Value);
         }
+
+        
 
         public int id_ps02
         {

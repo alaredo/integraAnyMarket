@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,29 +12,29 @@ namespace integraAnyMarket
         public void processaPedido(Order order)
         {
             Db db = new Db();
-            if (order.buyer.documentType == "CPF")
-            {
-                if (!db.CheckPF(order.buyer.documentNumberNormalized)) {
-                    db.InsertPF(    order.buyer.name, 
-                                    "", DateTime.Now, 
-                                    "", 
-                                    order.buyer.documentNumberNormalized, 
-                                    null, 
-                                    "0",
-                                    "", 
-                                    "", 
-                                    order.buyer.phone, 
-                                    order.buyer.cellPhone );
+            db.ProcessaPedido(order);
+            
+        }
 
-                }
-            }
-            if (order.buyer.documentType == "CNPJ")
+
+        public void processaEstoque()
+        {
+            Db db = new Db();
+            DataTable dt = db.LoadStock();
+            List<SetStock> lstStocks = new List<SetStock>();
+            
+            foreach( DataRow dr in dt.Rows )
             {
-                if (!db.CheckPJ(order.buyer.documentNumberNormalized))
-                {
-                    //db.insertPJ()
-                }
+                lstStocks = new List<SetStock>();
+                SetStock setStock = new SetStock();
+                setStock.idOrigem = dr["id_apisd"].ToString();
+                setStock.partnerId = dr["id_sku"].ToString();
+                setStock.quantity = dr["qt_prod"].ToString();
+                lstStocks.Add(setStock);
+                AnyMarket any = new AnyMarket();
+                any.SetStock(lstStocks);
             }
+            
         }
     }
 }

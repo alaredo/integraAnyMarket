@@ -55,6 +55,7 @@ namespace integraAnyMarket
             addParameter("P_ID_TRANSPORTADORA", OracleType.VarChar, 30, id_transportadora, cmd);
             addParameter("P_ID_CFOP", OracleType.VarChar, 30, id_cfop, cmd);
             addParameter("P_ID_LIMITE", OracleType.VarChar, 9, id_limite, cmd);
+            addParameter("P_ID_PSP", OracleType.VarChar, 30, id_marketplace, cmd);
             addParameter("P_TP_PO", OracleType.VarChar, 1, tp_po, cmd);
             addParameter("P_DT_ORC", OracleType.DateTime, 0, dt_orc, cmd);
             addParameter("P_DT_EMISSAO", OracleType.DateTime, 0, dt_emissao, cmd);
@@ -131,14 +132,16 @@ namespace integraAnyMarket
             addParameter("P_VL_DIFICMS", OracleType.Double, 20, vl_dificms, cmd);
             addParameter("P_DS_FRETE", OracleType.VarChar, 20, ds_frete, cmd);
             addParameter("P_VL_FRETE", OracleType.Double, 20, vl_frete, cmd);
+            addParameter("P_VL_FRETEPF", OracleType.Double, 20, vl_fretePF, cmd);
             addParameter("P_CD_RECVAL", OracleType.Double, 20, cd_recval, cmd);
             addParameter("P_VL_BASEST", OracleType.Double, 20, vl_basest, cmd);
             addParameter("P_VL_ST", OracleType.Double, 20, vl_st, cmd);
             addParameter("P_CD_ST", OracleType.Double, 1, cd_st, cmd);
             addParameter("P_VL_DEFERE", OracleType.Double, 20, vl_defere, cmd);
             addParameter("P_VL_STCRED", OracleType.Double, 20, vl_stcred, cmd);
-            addParameter("P_CD_EZ", OracleType.Double, 12, 0, cmd);
+            addParameter("P_VL_FRETE2", OracleType.Double, 20, vl_frete, cmd);
             addParameter("P_CD_PEDORG", OracleType.VarChar, 30, cd_pedorg, cmd);
+            addParameter("P_CD_PEDORG2", OracleType.VarChar, 30, cd_pedorg2, cmd);
             addParameter("P_CD_PEDENT", OracleType.VarChar, 30, "0", cmd);
             addParameter("P_VL_BASEICMSDEST", OracleType.Double, 1, 0, cmd);
             addParameter("P_VL_ICMSFCP", OracleType.Double, 1, 0, cmd);
@@ -158,20 +161,7 @@ namespace integraAnyMarket
             return Convert.ToString(id_pedido);
         }
 
-        public object empresa
-        {
-            get
-            {
-                return m_empresa;
-            }
-
-            set
-            {
-                m_empresa = value;
-            }
-        }
-
-        private object m_empresa;
+        public object empresa{ get; set; }
 
         public string cd_agrupa { get; set; }
 
@@ -323,6 +313,11 @@ namespace integraAnyMarket
             {
                 m_id_limite = value;
             }
+        }
+
+        public object id_marketplace
+        {
+            get; set;
         }
 
         private object m_id_limite;
@@ -1495,6 +1490,8 @@ namespace integraAnyMarket
             }
         }
 
+        public object vl_fretePF { get; set; }
+
         private object m_vl_frete;
 
         public object cd_recval
@@ -1618,6 +1615,8 @@ namespace integraAnyMarket
         }
 
         private int m_id_pedido;
+
+        public string cd_pedorg2 { get; set; }
 
         public string cd_pedorg
         {
