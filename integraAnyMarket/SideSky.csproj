@@ -66,6 +66,7 @@
     <Compile Include="FrmMain.Designer.cs">
       <DependentUpon>FrmMain.cs</DependentUpon>
     </Compile>
+    <Compile Include="Log.cs" />
     <Compile Include="order.cs" />
     <Compile Include="PedidoBd.cs" />
     <Compile Include="PedidoItemBd.cs" />

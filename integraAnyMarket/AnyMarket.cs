@@ -116,6 +116,7 @@ namespace integraAnyMarket
                 } catch ( Exception ex)
                 {
                     string msg = ex.Message;
+                    Log.Set($"Erro Saldo Produto: {ex.Message}");
                 }
             //}
         }

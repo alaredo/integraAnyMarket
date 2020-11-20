@@ -428,7 +428,14 @@ namespace integraAnyMarket
         public bool ProcessaPedido(Order order)
         {
             bool retorno;
-            retorno = false;
+             retorno = false;
+            if (CheckPed(order.marketPlaceNumber))
+            {
+               //throw new Exception("Ja existe um pedido cadastrado com este codigo - " + order.marketPlaceNumber);
+                Log.Set("Ja existe um pedido cadastrado com este codigo - " + order.marketPlaceNumber);
+                return retorno;
+            }
+
 
             OracleConnection con = new OracleConnection(connectionString);
             con.Open();
@@ -440,9 +447,7 @@ namespace integraAnyMarket
 
             try
             {
-                if (CheckPed(order.marketPlaceNumber))
-                    throw new Exception("Ja existe um pedido cadastrado com este codigo - " + order.marketPlaceNumber);
-
+                
                 Shipping entrega = order.shipping;
                 if (entrega.comment == null)
                     entrega.comment = "";
@@ -462,8 +467,15 @@ namespace integraAnyMarket
                     {
                         id_localidade = GetIdLocalidade(order.shipping.city, order.shipping.state);
 
-                        updateEndereco(2, id_localidade, entrega.street, entrega.number, entrega.comment, entrega.neighborhood, entrega.zipCode, cmd);
-                        //insertEndereco(2, id_localidade, entrega.street, entrega.number, entrega.comment, entrega.neighborhood, entrega.zipCode, cmd);
+                        DataTable dtFind = Load($"select * from tb_endereco where id_pessoa={id_pessoa}");
+                        if (dtFind.Rows.Count > 0)
+                        {
+                            updateEndereco(2, id_localidade, entrega.street, entrega.number, entrega.comment, entrega.neighborhood, entrega.zipCode, cmd);
+                        } else
+                        {
+                            insertEndereco(2, id_localidade, entrega.street, entrega.number, entrega.comment, entrega.neighborhood, entrega.zipCode, cmd);
+                        }
+
                         updateClientes(cmd);
                     }
                     else
@@ -479,11 +491,13 @@ namespace integraAnyMarket
                         InsertPF(order.buyer.name, order.buyer.document, DateTime.Now, "", order.buyer.document, DateTime.Now, strSexo, " ", " ", order.buyer.phone, order.buyer.cellPhone);
 
                         id_localidade = GetIdLocalidade(entrega.city, entrega.state);
-                        insertEndereco(2, id_localidade, entrega.street, entrega.number, entrega.address, entrega.neighborhood, entrega.zipCode, cmd);
-
-                        //id_localidade = GetIdLocalidade(cobranca.city, cobranca.state);
-                       // insertEndereco(2, id_localidade, cobranca.street, cobranca.number, cobranca.comment, cobranca.neighborhood, cobranca.zipCode, cmd);
-
+                        DataTable dtFind = Load($"select * from tb_endereco where id_pessoa={id_pessoa}");
+                        if (dtFind.Rows.Count > 0)
+                        {
+                            updateEndereco(2, id_localidade, entrega.street, entrega.number, entrega.comment, entrega.neighborhood, entrega.zipCode, cmd);
+                        } else {
+                            insertEndereco(2, id_localidade, entrega.street, entrega.number, entrega.address, entrega.neighborhood, entrega.zipCode, cmd);
+                        } 
 
                         BuscaVendedor(order);
                         insertClientes(cmd);
@@ -516,6 +530,7 @@ namespace integraAnyMarket
 
                 string idPedido = cadastraOrcamento(order, cmd);
                 CadastraItemOrcamento(order, idPedido, cmd);
+                setObservacao(idPedido, order.marketPlaceNumber, order, cmd);
 
                 // pedido_1.SavePedido(pedido_1)
 
@@ -526,11 +541,12 @@ namespace integraAnyMarket
             }
             catch (Exception ex)
             {
+                Log.Set($"Erro - Pedido: {order.anymarketAddress} - {ex.Message}");
                 myTrans.Rollback();
                 //order.statusSiad = "Erro";
                 //Form1.SaveOrderFile(order);
                 //retorno = false;
-                //Log.Set("Pedido: " + order.marketPlaceNumber + " " + ex.Message);
+
             }
             finally
             {
@@ -720,8 +736,69 @@ namespace integraAnyMarket
 
         }
 
+        private void setObservacao(string id_pedido, string pedidoMktPlace, Order order, OracleCommand cmd)
+        {
+            cmd.Parameters.Clear();
+            cmd.CommandText = "SP_COM_PEDS04_INS";
+            cmd.CommandType = CommandType.StoredProcedure;
+            addParameter("P_ID_PEDIDO", OracleType.Double, 9, id_pedido, cmd);
+            addParameter("p_ds_Linha01", OracleType.VarChar, 30, "", cmd);
+            addParameter("p_ds_Linha02", OracleType.VarChar, 30, $"Número Pedido...: {pedidoMktPlace}", cmd);
+            addParameter("p_ds_Linha03", OracleType.VarChar, 30, "", cmd);
+            addParameter("p_ds_Linha04", OracleType.VarChar, 30, "", cmd);
+            addParameter("p_Usuario", OracleType.VarChar, 20, "pedidoWeb", cmd);
+            cmd.ExecuteNonQuery();
 
-        
+            if ( order.items.Length > 1)
+            {
+                cmd.Parameters.Clear();
+                cmd.CommandText = "SP_COM_PEDIDO_UPD2";
+                cmd.CommandType = CommandType.StoredProcedure;
+                addParameter("P_ID_PEDIDO", OracleType.Double, 9, id_pedido, cmd);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        private void setPedLog(string id_pedido, string pedidoMktPlace, string str_json, string descricao)
+        {
+            using (OracleConnection connection = new OracleConnection(connectionString))
+            {
+                connection.Open();
+
+                OracleCommand cmd = new OracleCommand("SP_API_APIPED_INS", connection);
+                cmd.Parameters.Clear();
+                cmd.CommandText = "SP_API_APIPED_INS";
+                cmd.CommandType = CommandType.StoredProcedure;
+                addParameter("P_ID_PED", OracleType.Double, 9, id_pedido, cmd);
+                addParameter("p_ID_PSP", OracleType.VarChar, 30, "", cmd);
+                addParameter("p_CD_JSON", OracleType.VarChar,4000, "", cmd);
+                addParameter("p_DS_RET", OracleType.VarChar,1200, "", cmd);
+                addParameter("p_STATUS", OracleType.VarChar, 2, "", cmd);
+                cmd.ExecuteNonQuery();
+
+                connection.Close();
+            }
+        }
+
+        private void setProdLog(string cd_ret, string ds_ret)
+        {
+            using (OracleConnection connection = new OracleConnection(connectionString))
+            {
+                connection.Open();
+
+                OracleCommand cmd = new OracleCommand("SP_API_APIPED_INS", connection);
+                cmd.Parameters.Clear();
+                cmd.CommandText = "SP_API_SDPROD_INS";
+                cmd.CommandType = CommandType.StoredProcedure;
+                addParameter("p_CD_RET", OracleType.VarChar, 4000, "", cmd);
+                addParameter("p_DS_RET", OracleType.VarChar, 1200, "", cmd);
+                addParameter("p_STATUS", OracleType.VarChar, 2, "", cmd);
+                cmd.ExecuteNonQuery();
+
+                connection.Close();
+            }
+        }
+
         private string cadastraOrcamento(Order pedido, OracleCommand cmd)
         {
             Buyer cliente = pedido.buyer;

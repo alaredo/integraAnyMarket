@@ -123,7 +123,7 @@ namespace integraAnyMarket
                 ErpBridge erpBridge = new ErpBridge();
                 erpBridge.processaPedido(order);
             }
-
+            this.Cursor = Cursors.Default;
         }
 
         private void CmdProd3_Click(object sender, EventArgs e)
