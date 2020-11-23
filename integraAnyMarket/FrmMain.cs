@@ -118,7 +118,7 @@ namespace integraAnyMarket
             AnyMarket anyMarket = new AnyMarket();
             RootOrder root = anyMarket.GetPedidos();
 
-            foreach( Order order in root.produtos)
+            foreach( Order order in root.orders)
             {
                 ErpBridge erpBridge = new ErpBridge();
                 erpBridge.processaPedido(order);

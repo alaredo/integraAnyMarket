@@ -80,7 +80,7 @@ namespace integraAnyMarket
                 using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
                 {
                     var result = streamReader.ReadToEnd();
-                    result = result.Replace("content", "produtos");
+                    result = result.Replace("content", "orders");
                     root = JsonConvert.DeserializeObject<RootOrder>(result);
                 }
             }

@@ -10,7 +10,7 @@ namespace integraAnyMarket
     public class RootOrder
     {
         public Link[] links { get; set; }
-        public Order[] produtos { get; set; }
+        public Order[] orders { get; set; }
         public Page page { get; set; }
     }
 
