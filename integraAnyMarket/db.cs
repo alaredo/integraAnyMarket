@@ -35,7 +35,6 @@ namespace integraAnyMarket
         private string id_transportadora;
         private string id_marketPlace;
 
-
         private enum TipoEndereco
         {
             Comercial,
@@ -70,13 +69,79 @@ namespace integraAnyMarket
             }
         }
 
+
+
+       
+
+
         public DataTable LoadProdutos()
         {
+            DataTable dataTable = new DataTable();
+            bool ret = true;
+            try
+            {
+                string queryString = Convert.ToString("select id_psp from tb_psplace where id_psp in (1, 2, 3) order by id_psp");
+                using (OracleConnection connection = new OracleConnection(connectionString))
+                {
+                    connection.Open();
+
+                    OracleCommand command = new OracleCommand(queryString, connection);
+                    OracleDataReader reader = command.ExecuteReader();
+
+                    if (reader.Read())
+                        ret = true;
+                    else
+                        ret = false;
+
+                    DataTable dtSchema = reader.GetSchemaTable();
+                    List<DataColumn> listCols = new List<DataColumn>();
+
+                    if (dtSchema != null)
+                    {
+                        foreach (DataRow drow in dtSchema.Rows)
+                        {
+                            string columnName = System.Convert.ToString(drow["ColumnName"]);
+                            DataColumn column = new DataColumn(columnName, (Type)(drow["DataType"]));
+                            //column.Unique = (bool)drow["IsUnique"];
+                            //column.AllowDBNull = (bool)drow["AllowDBNull"];
+                            //column.AutoIncrement = (bool)drow["IsAutoIncrement"];
+                            listCols.Add(column);
+                            dataTable.Columns.Add(column);
+                        }
+                    }
+                    do
+                    {
+                        DataRow dataRow = dataTable.NewRow();
+                        for (int i = 0; i < listCols.Count; i++)
+                        {
+                            dataRow[((DataColumn)listCols[i])] = reader[i];
+                        }
+                        dataTable.Rows.Add(dataRow);
+                    } while (reader.Read());
+
+
+
+
+
+                    reader.Close();
+                    connection.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                string message = ex.Message;
+
+            }
+            return dataTable;
+
+            /*
+
             DataTable dataTable = new DataTable();
             try
             {
                 string queryString = @"select id_Produto AS COD, cd_fabricante AS FAB, ds_Produto AS DESCRICAO from tb_produtos WHERE ds_Produto like '%JAQUETA%' ";
-
+                //string queryString = @"select * from tb_psplace where id_psp in (1, 2, 3, 4, 9)";
+                
                 using (OracleConnection connection = new OracleConnection(connectionString))
                 {
                     connection.Open();
@@ -97,6 +162,7 @@ namespace integraAnyMarket
                 string message = ex.Message;
 
             }
+            */
             return dataTable;
         }
 
@@ -428,14 +494,44 @@ namespace integraAnyMarket
 
         public bool ProcessaPedido(Order order)
         {
+
+
             bool retorno;
-             retorno = false;
+            retorno = false;
+
+            BuscaVendedor(order);
+
             if (CheckPed(order.marketPlaceNumber))
             {
                //throw new Exception("Ja existe um pedido cadastrado com este codigo - " + order.marketPlaceNumber);
                 Log.Set("Ja existe um pedido cadastrado com este codigo - " + order.marketPlaceNumber);
-                setPedLog(order.marketPlaceNumber, order.marketPlaceNumber, JsonConvert.SerializeObject(order), "Ja existe um pedido cadastrado com este codigo");
+                setPedLog(order.marketPlaceNumber, order.marketPlaceNumber, JsonConvert.SerializeObject(order), "Ja existe um pedido cadastrado com este codigo", id_marketPlace, "2");
                 return retorno;
+            }
+
+            
+
+            foreach (Item i in order.items )
+            {
+                string cod_produto = i.sku.partnerId;
+                Item it = i;
+                Prod_aux prodAux =  buscaProdutoCodigo(it.sku.partnerId, ref it);
+
+                
+                if ((i.sku.partnerId != prodAux.Codigo) && (prodAux.Codigo != null))
+                    cod_produto = prodAux.Codigo;
+
+                string strQuery = $"select * from tb_produto where id_produto = '{cod_produto}'";
+                DataTable dtProduto = Load(strQuery);
+                if (dtProduto.Rows.Count == 0)
+                {
+                    Log.Set("Produto nao cadastrado - " + cod_produto);
+                    setPedLog(order.marketPlaceNumber, order.marketPlaceNumber, JsonConvert.SerializeObject(order), "Produto nao cadastrado - " + cod_produto, id_marketPlace, "2");
+                    return retorno;
+                }
+
+
+
             }
 
             OracleConnection con = new OracleConnection(connectionString);
@@ -554,18 +650,20 @@ namespace integraAnyMarket
                 myTrans.Commit();
                 //order.statusSiad = "Importado";
                 retorno = true;
-               // SaveOrderFileOk(order);
+                // SaveOrderFileOk(order);
+
+                setPedLog(order.marketPlaceNumber, order.marketPlaceNumber, JsonConvert.SerializeObject(order), "Sucesso", id_marketPlace, "1");
             }
             catch (Exception ex)
             {
                 Log.Set($"Erro - Pedido: {order.anymarketAddress} - {ex.Message}");
 
-                setPedLog(order.marketPlaceNumber, order.marketPlaceNumber, JsonConvert.SerializeObject(order), ex.Message);
+                setPedLog(order.marketPlaceNumber, order.marketPlaceNumber, JsonConvert.SerializeObject(order), ex.Message, id_marketPlace, "2");
 
                 myTrans.Rollback();
                 //order.statusSiad = "Erro";
                 //Form1.SaveOrderFile(order);
-                //retorno = false;
+                retorno = false;
 
             }
             finally
@@ -677,7 +775,25 @@ namespace integraAnyMarket
             channel = pedido.marketPlace.ToUpper();
             bool achou = false;
 
-            if ((channel == "B2W NOVA API") || (channel == "B2W_NEW_API"))
+            string strQuery = $"select id_vendedor, id_transportadora, id_revenda, id_psp from tb_psplace where ds_psp = '{channel}'";
+            DataTable dtChannel = Load(strQuery);
+            if ( dtChannel.Rows.Count > 0)
+            {
+                foreach (DataRow r in dtChannel.Rows)
+                {
+                    achou = true;
+                    id_vendedor = r["id_vendedor"].ToString();
+                    id_transportadora = r["id_transportadora"].ToString();
+                    id_revenda = r["id_revenda"].ToString();
+                    id_marketPlace = r["id_psp"].ToString(); 
+                }
+            } else
+            {
+                setPedLog(pedido.marketPlaceNumber, pedido.marketPlaceNumber, JsonConvert.SerializeObject(pedido), "Market Place nao encontrado", "0", "2");
+                achou = false;
+            }
+
+/*            if ((channel == "B2W NOVA API") || (channel == "B2W_NEW_API"))
             {
                 achou = true;
                 id_vendedor = "755873";
@@ -749,6 +865,16 @@ namespace integraAnyMarket
                 id_marketPlace = "7";
             }
 
+            if ((channel == "CENTAURO"))
+            {
+                achou = true;
+                id_vendedor = "1641661";
+                id_transportadora = "193064";
+                id_revenda = "1641662";
+                id_marketPlace = "7";
+            }
+            */
+
             if (!achou)
             {
                 id_vendedor = "-1";
@@ -779,8 +905,14 @@ namespace integraAnyMarket
             }
         }
 
-        private void setPedLog(string id_pedido, string pedidoMktPlace, string str_json, string descricao)
+        private void setPedLog(string id_pedido, string pedidoMktPlace, string str_json, string descricao, string id_psp, string status)
         {
+            Double id_psp_official = 0;
+            
+            if (id_psp != "0")
+            {
+                id_psp_official = Convert.ToDouble(id_psp);
+            }
             using (OracleConnection connection = new OracleConnection(connectionString))
             {
                 connection.Open();
@@ -793,10 +925,10 @@ namespace integraAnyMarket
                 retval.Direction = ParameterDirection.InputOutput;
                 cmd.Parameters.Add(retval);
                 addParameter("P_ID_PED", OracleType.VarChar, 30, id_pedido, cmd);
-                addParameter("p_ID_PSP", OracleType.Double, 9, 0, cmd);
+                addParameter("p_ID_PSP", OracleType.Double, 9, id_psp_official, cmd);
                 addParameter("p_CD_JSON", OracleType.VarChar,4000, str_json, cmd);
                 addParameter("p_DS_RET", OracleType.VarChar,1200, descricao, cmd);
-                addParameter("p_STATUS", OracleType.VarChar, 2, "0", cmd);
+                addParameter("p_STATUS", OracleType.VarChar, 2, status, cmd);
                 cmd.ExecuteNonQuery();
 
                 connection.Close();
@@ -938,7 +1070,7 @@ namespace integraAnyMarket
                 {
                     string aux = item.sku.partnerId;
                     item.sku.partnerId = item.sku.partnerId.Substring(0, cod.IndexOf('-'));
-                    item.cd_produto = aux.Substring(cod.IndexOf('-'), aux.Length); 
+                    item.cd_produto = aux.Substring(cod.IndexOf('-'), aux.Length);
                 }
 
                 string query = $"SELECT id_Produto, cd_Para FROM tb_ProdDePara WHERE cd_De = '{item.sku.partnerId}'";
@@ -951,7 +1083,9 @@ namespace integraAnyMarket
                         item.sku.partnerId = dtCheckItem.Rows[0]["id_produto"].ToString();
                 }
 
-                p_aux = buscaProdutoCodigo(item.sku.partnerId);
+
+                Item it = item;
+                p_aux = buscaProdutoCodigo(item.sku.partnerId, ref it);
 
             }
 
@@ -1067,8 +1201,31 @@ namespace integraAnyMarket
            
         }
 
-        public Prod_aux buscaProdutoCodigo(string sku )
+        public Prod_aux buscaProdutoCodigo(string sku, ref Item item )
         {
+
+            String cod = item.sku.partnerId;
+
+            if (cod.IndexOf('-') > -1)
+            {
+                string aux = item.sku.partnerId;
+                item.sku.partnerId = item.sku.partnerId.Substring(0, cod.IndexOf('-'));
+                item.cd_produto = aux.Substring(cod.IndexOf('-'), aux.Length);
+            }
+
+            string query = $"SELECT id_Produto, cd_Para FROM tb_ProdDePara WHERE cd_De = '{item.sku.partnerId}'";
+            DataTable dtCheckItem = Load(query);
+            if (dtCheckItem.Rows.Count > 0)
+            {
+                if (dtCheckItem.Rows[0]["id_produto"].ToString() == "")
+                    item.sku.partnerId = dtCheckItem.Rows[0]["cd_Para"].ToString();
+                else
+                    item.sku.partnerId = dtCheckItem.Rows[0]["id_produto"].ToString();
+            }
+
+
+
+
             Prod_aux prod = new Prod_aux();
             string queryString = Convert.ToString("SELECT a.id_produto, a.ds_produto FROM tb_produtos a WHERE a.cd_fabricante = '") + sku + "'";
             DataTable dtFabricante = Load(queryString);

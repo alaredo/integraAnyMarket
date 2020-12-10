@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -9,11 +10,18 @@ namespace integraAnyMarket
 {
     public class ErpBridge
     {
-        public void processaPedido(Order order)
+
+        public List<PedidoProcessado> lstProcessados = new List<PedidoProcessado>();
+        public void processaPedido()
         {
-            Db db = new Db();
-            db.ProcessaPedido(order);
-            
+            AnyMarket anyMarket = new AnyMarket();
+            RootOrder root = anyMarket.GetPedidos();
+
+            foreach (Order o in root.orders)
+            {
+                Db db = new Db();
+                db.ProcessaPedido(o);
+            }
         }
 
 
