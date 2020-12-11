@@ -81,51 +81,7 @@ namespace integraAnyMarket
             try
             {
                 string queryString = Convert.ToString("select id_psp from tb_psplace where id_psp in (1, 2, 3) order by id_psp");
-                using (OracleConnection connection = new OracleConnection(connectionString))
-                {
-                    connection.Open();
-
-                    OracleCommand command = new OracleCommand(queryString, connection);
-                    OracleDataReader reader = command.ExecuteReader();
-
-                    if (reader.Read())
-                        ret = true;
-                    else
-                        ret = false;
-
-                    DataTable dtSchema = reader.GetSchemaTable();
-                    List<DataColumn> listCols = new List<DataColumn>();
-
-                    if (dtSchema != null)
-                    {
-                        foreach (DataRow drow in dtSchema.Rows)
-                        {
-                            string columnName = System.Convert.ToString(drow["ColumnName"]);
-                            DataColumn column = new DataColumn(columnName, (Type)(drow["DataType"]));
-                            //column.Unique = (bool)drow["IsUnique"];
-                            //column.AllowDBNull = (bool)drow["AllowDBNull"];
-                            //column.AutoIncrement = (bool)drow["IsAutoIncrement"];
-                            listCols.Add(column);
-                            dataTable.Columns.Add(column);
-                        }
-                    }
-                    do
-                    {
-                        DataRow dataRow = dataTable.NewRow();
-                        for (int i = 0; i < listCols.Count; i++)
-                        {
-                            dataRow[((DataColumn)listCols[i])] = reader[i];
-                        }
-                        dataTable.Rows.Add(dataRow);
-                    } while (reader.Read());
-
-
-
-
-
-                    reader.Close();
-                    connection.Close();
-                }
+                dataTable = Load(queryString);
             }
             catch (Exception ex)
             {
@@ -134,36 +90,7 @@ namespace integraAnyMarket
             }
             return dataTable;
 
-            /*
-
-            DataTable dataTable = new DataTable();
-            try
-            {
-                string queryString = @"select id_Produto AS COD, cd_fabricante AS FAB, ds_Produto AS DESCRICAO from tb_produtos WHERE ds_Produto like '%JAQUETA%' ";
-                //string queryString = @"select * from tb_psplace where id_psp in (1, 2, 3, 4, 9)";
-                
-                using (OracleConnection connection = new OracleConnection(connectionString))
-                {
-                    connection.Open();
-
-                    OracleCommand command = new OracleCommand(queryString, connection);
-                    OracleDataReader reader = command.ExecuteReader();
-                    if (reader.Read())
-                    {
-                        dataTable.Load(reader);
-                    }
-
-                    reader.Close();
-                    connection.Close();
-                }
-            }
-            catch (Exception ex)
-            {
-                string message = ex.Message;
-
-            }
-            */
-            return dataTable;
+            
         }
 
         public bool CheckPed(string ped)
@@ -200,60 +127,34 @@ namespace integraAnyMarket
 
         public bool CheckPF(string cpf)
         {
-            bool ret = true;
+            bool ret = false;
 
             string queryString = Convert.ToString("SELECT a.id_Pessoa, a.ds_pessoa, b.cd_cpf, b.id_localidade FROM tb_Pessoa  a, tb_Fisicos  b WHERE a.id_Pessoa = b.id_Pessoa AND b.cd_cpf = '") + cpf + "'";
-            using (OracleConnection connection = new OracleConnection(connectionString))
+            DataTable dt = Load(queryString);
+            if (dt.Rows.Count > 0)
             {
-                connection.Open();
-                OracleCommand command = new OracleCommand(queryString, connection);
-                OracleDataReader reader = command.ExecuteReader();
-                try
+                foreach(DataRow r in dt.Rows)
                 {
-                    if (reader.Read())
-                    {
-                        ret = true;
-
-                        // Console.WriteLine(reader.GetInt32(0) + ", " + reader.GetString(1) + ", " + reader.GetString(2));
-                        id_pessoa = reader.GetInt32(0);
-                    }
-                    else
-                        ret = false;
-                }
-                finally
-                {
-                    // always call Close when done reading.
-                    reader.Close();
+                    ret = false;
+                    id_pessoa = Convert.ToInt32(r["id_Pessoa"]);
                 }
             }
+
             return ret;
         }
 
         public bool CheckPJ(string cnpj)
         {
-            bool ret = true;
+            bool ret = false;
 
             string queryString = Convert.ToString("SELECT a.id_Pessoa, a.ds_pessoa, b.cd_cnpj FROM tb_Pessoa  a, tb_Juridicos  b WHERE a.id_Pessoa = b.id_Pessoa AND b.cd_cnpj = ") + cnpj;
-            using (OracleConnection connection = new OracleConnection(connectionString))
+            DataTable dt = Load(queryString);
+            if (dt.Rows.Count > 0)
             {
-                connection.Open();
-                OracleCommand command = new OracleCommand(queryString, connection);
-                OracleDataReader reader = command.ExecuteReader();
-                try
+                foreach (DataRow r in dt.Rows)
                 {
-                    if (reader.Read())
-                    {
-                        ret = true;
-                        // Console.WriteLine(reader.GetInt32(0) + ", " + reader.GetString(1) + ", " + reader.GetString(2));
-                        id_pessoa = reader.GetInt32(0);
-                    }
-                    else
-                        ret = false;
-                }
-                finally
-                {
-                    // always call Close when done reading.
-                    reader.Close();
+                    ret = false;
+                    id_pessoa = Convert.ToInt32(r["id_Pessoa"]);
                 }
             }
             return ret;
@@ -266,23 +167,18 @@ namespace integraAnyMarket
             nome = RemoveAccents(nome);
 
             string queryString = (Convert.ToString((Convert.ToString("SELECT id_localidade FROM tb_localidades WHERE TRIM(ds_localidade) = UPPER('") + nome) + "') and TRIM( CD_UF ) = UPPER('") + uf) + "')";
-            using (OracleConnection connection = new OracleConnection(connectionString))
+            DataTable dt = Load(queryString);
+            if (dt.Rows.Count > 0)
             {
-                OracleCommand command = new OracleCommand(queryString, connection);
-                connection.Open();
-                OracleDataReader reader = command.ExecuteReader();
-                try
+                foreach (DataRow r in dt.Rows)
                 {
-                    if (reader.Read())
-                        ret = reader.GetInt32(0);
-                    else
-                        ret = 107001;// Nao localizado
+                    ret = Convert.ToInt32(r[0]);
                 }
-                finally
-                {
-                    reader.Close();
-                }
+            } else
+            {
+                ret = 107001;// Nao localizado
             }
+
             return ret;
         }
 
@@ -505,7 +401,7 @@ namespace integraAnyMarket
             {
                //throw new Exception("Ja existe um pedido cadastrado com este codigo - " + order.marketPlaceNumber);
                 Log.Set("Ja existe um pedido cadastrado com este codigo - " + order.marketPlaceNumber);
-                setPedLog(order.marketPlaceNumber, order.marketPlaceNumber, JsonConvert.SerializeObject(order), "Ja existe um pedido cadastrado com este codigo", id_marketPlace, "2");
+                setPedLog(order.marketPlaceNumber, order.marketPlaceNumber, JsonConvert.SerializeObject(order), $"Ja existe um pedido cadastrado com este codigo - {order.marketPlaceNumber}", id_marketPlace, "2");
                 return retorno;
             }
 
@@ -513,12 +409,12 @@ namespace integraAnyMarket
 
             foreach (Item i in order.items )
             {
-                string cod_produto = i.sku.partnerId;
+                string cod_produto = i.idInMarketPlace;
                 Item it = i;
-                Prod_aux prodAux =  buscaProdutoCodigo(it.sku.partnerId, ref it);
+                Prod_aux prodAux =  buscaProdutoCodigo(it.idInMarketPlace, ref it);
 
                 
-                if ((i.sku.partnerId != prodAux.Codigo) && (prodAux.Codigo != null))
+                if ((i.idInMarketPlace != prodAux.Codigo) && (prodAux.Codigo != null))
                     cod_produto = prodAux.Codigo;
 
                 string strQuery = $"select * from tb_produto where id_produto = '{cod_produto}'";
@@ -526,6 +422,7 @@ namespace integraAnyMarket
                 if (dtProduto.Rows.Count == 0)
                 {
                     Log.Set("Produto nao cadastrado - " + cod_produto);
+
                     setPedLog(order.marketPlaceNumber, order.marketPlaceNumber, JsonConvert.SerializeObject(order), "Produto nao cadastrado - " + cod_produto, id_marketPlace, "2");
                     return retorno;
                 }
@@ -1064,28 +961,28 @@ namespace integraAnyMarket
 
             foreach ( Item item in pedido.items )
             {
-                String cod = item.sku.partnerId;
+                String cod = item.idInMarketPlace;
 
                 if (cod.IndexOf('-') > -1)
                 {
-                    string aux = item.sku.partnerId;
-                    item.sku.partnerId = item.sku.partnerId.Substring(0, cod.IndexOf('-'));
+                    string aux = item.idInMarketPlace;
+                    item.idInMarketPlace = item.idInMarketPlace.Substring(0, cod.IndexOf('-'));
                     item.cd_produto = aux.Substring(cod.IndexOf('-'), aux.Length);
                 }
 
-                string query = $"SELECT id_Produto, cd_Para FROM tb_ProdDePara WHERE cd_De = '{item.sku.partnerId}'";
+                string query = $"SELECT id_Produto, cd_Para FROM tb_ProdDePara WHERE cd_De = '{item.idInMarketPlace}'";
                 DataTable dtCheckItem = Load(query);
                 if (dtCheckItem.Rows.Count > 0)
                 {
                     if (dtCheckItem.Rows[0]["id_produto"].ToString() == "")
-                        item.sku.partnerId = dtCheckItem.Rows[0]["cd_Para"].ToString();
+                        item.idInMarketPlace = dtCheckItem.Rows[0]["cd_Para"].ToString();
                     else
-                        item.sku.partnerId = dtCheckItem.Rows[0]["id_produto"].ToString();
+                        item.idInMarketPlace = dtCheckItem.Rows[0]["id_produto"].ToString();
                 }
 
 
                 Item it = item;
-                p_aux = buscaProdutoCodigo(item.sku.partnerId, ref it);
+                p_aux = buscaProdutoCodigo(item.idInMarketPlace, ref it);
 
             }
 
@@ -1110,7 +1007,7 @@ namespace integraAnyMarket
                 PedidoItemBd itemPedido = new PedidoItemBd();
 
                 itemPedido.id_pedido = idPedido;
-                itemPedido.id_produto = item.sku.partnerId;
+                itemPedido.id_produto = item.idInMarketPlace;
                 itemPedido.cd_ez = 0;
                 itemPedido.ds_produto = item.product.title;
                 itemPedido.ds_unidade = "UN";
@@ -1149,6 +1046,7 @@ namespace integraAnyMarket
 
         public DataTable Load(string query)
         {
+            bool ret = false;
             DataTable dataTable = new DataTable();
             try
             {
@@ -1161,8 +1059,39 @@ namespace integraAnyMarket
                     OracleCommand command = new OracleCommand(queryString, connection);
                     OracleDataReader reader = command.ExecuteReader();
                     if (reader.Read())
+                        ret = true;
+                    else
+                        ret = false;
+
+                    if (ret)
                     {
-                        dataTable.Load(reader);
+
+                        DataTable dtSchema = reader.GetSchemaTable();
+                        List<DataColumn> listCols = new List<DataColumn>();
+
+                        if (dtSchema != null)
+                        {
+                            foreach (DataRow drow in dtSchema.Rows)
+                            {
+                                string columnName = System.Convert.ToString(drow["ColumnName"]);
+                                DataColumn column = new DataColumn(columnName, (Type)(drow["DataType"]));
+                                //column.Unique = (bool)drow["IsUnique"];
+                                //column.AllowDBNull = (bool)drow["AllowDBNull"];
+                                //column.AutoIncrement = (bool)drow["IsAutoIncrement"];
+                                listCols.Add(column);
+                                dataTable.Columns.Add(column);
+                            }
+                        }
+                        do
+                        {
+                            DataRow dataRow = dataTable.NewRow();
+                            for (int i = 0; i < listCols.Count; i++)
+                            {
+                                dataRow[((DataColumn)listCols[i])] = reader[i];
+                            }
+                            dataTable.Rows.Add(dataRow);
+                        } while (reader.Read());
+
                     }
 
                     reader.Close();
@@ -1172,10 +1101,11 @@ namespace integraAnyMarket
             catch (Exception ex)
             {
                 string message = ex.Message;
-
+                Log.Set($"LOAD ERRO: {query} --> {message}");
             }
             return dataTable;
         }
+
 
         public void Execute(string query, OracleCommand cmd)
         {
@@ -1204,34 +1134,34 @@ namespace integraAnyMarket
         public Prod_aux buscaProdutoCodigo(string sku, ref Item item )
         {
 
-            String cod = item.sku.partnerId;
+            String cod = item.idInMarketPlace;
 
             if (cod.IndexOf('-') > -1)
             {
-                string aux = item.sku.partnerId;
-                item.sku.partnerId = item.sku.partnerId.Substring(0, cod.IndexOf('-'));
+                string aux = item.idInMarketPlace;
+                item.idInMarketPlace = item.idInMarketPlace.Substring(0, cod.IndexOf('-'));
                 item.cd_produto = aux.Substring(cod.IndexOf('-'), aux.Length);
             }
 
-            string query = $"SELECT id_Produto, cd_Para FROM tb_ProdDePara WHERE cd_De = '{item.sku.partnerId}'";
+            string query = $"SELECT id_Produto, cd_Para FROM tb_ProdDePara WHERE cd_De = '{item.idInMarketPlace}'";
             DataTable dtCheckItem = Load(query);
             if (dtCheckItem.Rows.Count > 0)
             {
                 if (dtCheckItem.Rows[0]["id_produto"].ToString() == "")
-                    item.sku.partnerId = dtCheckItem.Rows[0]["cd_Para"].ToString();
+                    item.idInMarketPlace = dtCheckItem.Rows[0]["cd_Para"].ToString();
                 else
-                    item.sku.partnerId = dtCheckItem.Rows[0]["id_produto"].ToString();
+                    item.idInMarketPlace = dtCheckItem.Rows[0]["id_produto"].ToString();
             }
 
 
 
 
             Prod_aux prod = new Prod_aux();
-            string queryString = Convert.ToString("SELECT a.id_produto, a.ds_produto FROM tb_produtos a WHERE a.cd_fabricante = '") + sku + "'";
+            string queryString = Convert.ToString("SELECT a.id_produto, a.ds_produto FROM tb_produtos a WHERE a.cd_fabricante = '") + item.idInMarketPlace + "'";
             DataTable dtFabricante = Load(queryString);
             if (dtFabricante.Rows.Count == 0)
             {
-                queryString = Convert.ToString("SELECT a.id_produto, a.ds_produto FROM tb_produtos a WHERE a.id_produto = ") + sku;
+                queryString = Convert.ToString("SELECT a.id_produto, a.ds_produto FROM tb_produtos a WHERE a.id_produto = ") + item.idInMarketPlace;
                 DataTable dtProduto = Load(queryString);
                 if (dtProduto.Rows.Count == 0)
                 {
@@ -1259,31 +1189,7 @@ namespace integraAnyMarket
             return dataTable;
         }
     
-        /*
-   
-        public void SaveOrderFileOk(Order order)
-        {
-            JsonSerializerSettings serializerSetting = new JsonSerializerSettings();
-            serializerSetting.NullValueHandling = NullValueHandling.Ignore;
-            string strProd;
-            try
-            {
-                strProd = JsonConvert.SerializeObject(order, Newtonsoft.Json.Formatting.Indented, serializerSetting);
-                if ((My.Computer.FileSystem.FileExists(".//Importados//" + order.code + ".ord")))
-                    My.Computer.FileSystem.DeleteFile(@".\Importados\" + order.code + ".ord");
-
-                System.IO.StreamWriter file;
-                file = My.Computer.FileSystem.OpenTextFileWriter(@".\Importados\" + order.code + ".ord", true);
-                file.WriteLine(strProd);
-                file.Close();
-            }
-            catch (Exception ex)
-            {
-                var strErroMessage = ex.Message;
-            }
-        }
-
-    */
+        
 
         public bool CheckPedido(string pId)
         {

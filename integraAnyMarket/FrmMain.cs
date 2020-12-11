@@ -68,6 +68,12 @@ namespace integraAnyMarket
 
         private void Button1_Click(object sender, EventArgs e)
         {
+            Search();
+
+        }
+
+        private void Search()
+        {
             DateTime dt1 = dateTimePicker1.Value;
             DateTime dt2 = dateTimePicker2.Value;
 
@@ -86,12 +92,11 @@ namespace integraAnyMarket
                 $"where TRUNC(dt_proc) >= to_Date('{dt1.ToString("dd/MM/yyyy")}', 'DD/MM/YYYY') " +
                 $"and TRUNC(dt_proc) <= to_Date('{dt2.ToString("dd/MM/yyyy")}', 'DD/MM/YYYY' ) " +
                 $"and status = {strStatus}";
-                
+
 
             Db db = new Db();
             DataTable dt = db.Load(strQuery);
             dataGridView1.DataSource = dt;
-
         }
 
         private void Button2_Click(object sender, EventArgs e)
@@ -153,9 +158,7 @@ namespace integraAnyMarket
 
             this.Cursor = Cursors.Default;
 
-            Db db = new Db();
-            DataTable dt = db.Load("SELECT id_apiped, dt_proc, id_ped, id_psp, cd_json, ds_ret, status FROM tb_apiped ");
-            dataGridView1.DataSource = dt;
+            Search();
         }
 
         private void CmdProd3_Click(object sender, EventArgs e)
