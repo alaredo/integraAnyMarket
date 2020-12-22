@@ -15,12 +15,18 @@ namespace integraAnyMarket
         public void processaPedido()
         {
             AnyMarket anyMarket = new AnyMarket();
-            RootOrder root = anyMarket.GetPedidos();
+            anyMarket.lstPages = new List<RootOrder>();
+            anyMarket.GetPedidos("http://api.anymarket.com.br/v2/orders?status=PAID_WAITING_SHIP&offset=5");
 
-            foreach (Order o in root.orders)
-            {
-                Db db = new Db();
-                db.ProcessaPedido(o);
+            List<RootOrder> lstPages = anyMarket.lstPages;
+            foreach (RootOrder r in lstPages) {
+                if (r.orders != null) { 
+                    foreach (Order o in r.orders)
+                    {
+                        Db db = new Db();
+                        db.ProcessaPedido(o);
+                    }
+                }
             }
         }
 

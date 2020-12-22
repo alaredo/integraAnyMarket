@@ -417,7 +417,7 @@ namespace integraAnyMarket
                 if ((i.idInMarketPlace != prodAux.Codigo) && (prodAux.Codigo != null))
                     cod_produto = prodAux.Codigo;
 
-                string strQuery = $"select * from tb_produto where id_produto = '{cod_produto}'";
+                string strQuery = $"select * from tb_produtos where id_produto = '{cod_produto}'";
                 DataTable dtProduto = Load(strQuery);
                 if (dtProduto.Rows.Count == 0)
                 {
@@ -672,7 +672,7 @@ namespace integraAnyMarket
             channel = pedido.marketPlace.ToUpper();
             bool achou = false;
 
-            string strQuery = $"select id_vendedor, id_transportadora, id_revenda, id_psp from tb_psplace where ds_psp = '{channel}'";
+            string strQuery = $"select id_vendedor, id_transportadora, id_revenda, id_psp from tb_psplace where upper(ds_psp) = '{channel}'";
             DataTable dtChannel = Load(strQuery);
             if ( dtChannel.Rows.Count > 0)
             {
@@ -686,7 +686,7 @@ namespace integraAnyMarket
                 }
             } else
             {
-                setPedLog(pedido.marketPlaceNumber, pedido.marketPlaceNumber, JsonConvert.SerializeObject(pedido), "Market Place nao encontrado", "0", "2");
+                setPedLog(pedido.marketPlaceNumber, pedido.marketPlaceNumber, JsonConvert.SerializeObject(pedido), "Market Place nao encontrado " + channel, "0", "2");
                 achou = false;
             }
 
@@ -891,7 +891,7 @@ namespace integraAnyMarket
             pedidoBel.ds_logradouro = entrega.street;
             pedidoBel.ds_numero = entrega.number;
             pedidoBel.ds_complemento = entrega.address;
-            pedidoBel.ds_bairro = entrega.state;
+            pedidoBel.ds_bairro = entrega.neighborhood;
             pedidoBel.cd_CEP = entrega.zipCode;
             pedidoBel.vl_total = pedido.total;
             pedidoBel.vl_produtos = pedido.gross;
@@ -1135,12 +1135,12 @@ namespace integraAnyMarket
         {
 
             String cod = item.idInMarketPlace;
-
-            if (cod.IndexOf('-') > -1)
+            int pos_tracinho = cod.IndexOf('-');
+            if (pos_tracinho > -1)
             {
                 string aux = item.idInMarketPlace;
                 item.idInMarketPlace = item.idInMarketPlace.Substring(0, cod.IndexOf('-'));
-                item.cd_produto = aux.Substring(cod.IndexOf('-'), aux.Length);
+                item.cd_produto = aux.Substring(pos_tracinho, aux.Length - pos_tracinho);
             }
 
             string query = $"SELECT id_Produto, cd_Para FROM tb_ProdDePara WHERE cd_De = '{item.idInMarketPlace}'";

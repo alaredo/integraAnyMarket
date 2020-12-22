@@ -40,10 +40,10 @@ namespace integraAnyMarket
         public string transmissionStatus { get; set; }
         public string status { get; set; }
         public string marketPlaceStatus { get; set; }
-        public int discount { get; set; }
-        public int freight { get; set; }
-        public int sellerFreight { get; set; }
-        public int interestValue { get; set; }
+        public decimal discount { get; set; }
+        public decimal freight { get; set; }
+        public decimal sellerFreight { get; set; }
+        public decimal interestValue { get; set; }
         public float gross { get; set; }
         public float total { get; set; }
         public Shipping shipping { get; set; }

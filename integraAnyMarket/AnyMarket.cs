@@ -65,12 +65,68 @@ namespace integraAnyMarket
             }
             return root;
         }
-        public RootOrder GetPedidos()
+
+        public List<RootOrder> lstPages = new List<RootOrder>();
+        public RootOrder GetPedidos(string url)
         {
+            
             RootOrder root = new RootOrder();
-            var url = "http://sandbox-api.anymarket.com.br/v2/orders?limit=30";
+            // var url = "http://sandbox-api.anymarket.com.br/v2/orders?limit=30";
             var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
-            httpWebRequest.Headers.Add("gumgaToken", "L31103086G1570648571245R-250576705");
+            httpWebRequest.Headers.Add("gumgaToken", "259025663L259027832E1628947780001C153563578000100O1.I"); //"L31103086G1570648571245R-250576705");
+            httpWebRequest.ContentType = "application/json";
+
+            httpWebRequest.Method = "GET";
+
+            string nextUrl = "";
+            try
+            {
+                var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                {
+                    var result = streamReader.ReadToEnd();
+                    result = result.Replace("content", "orders");
+                    root = JsonConvert.DeserializeObject<RootOrder>(result);
+
+                    lstPages.Add(root);
+                    if (root.orders != null)  {
+                        if (root.orders.Count() == 5)
+                        {
+                            foreach (Link l in root.links)
+                            {
+                                if (l.rel == "next")
+                                {
+                                    nextUrl = l.href;
+
+                                }
+                            }
+                        }
+                    } else
+                    {
+                        nextUrl = "";
+                    }
+                }
+                if ( nextUrl != "")
+                {
+                    RootOrder rootOrder = GetPedidos(nextUrl);
+                    nextUrl = "";
+                }
+            }
+            catch (Exception ex)
+            {
+                string message = ex.Message;
+            }
+            return root;
+        }
+
+        public List<RootOrder> GetPedidos()
+        {
+            List<RootOrder> lstPages = new List<RootOrder>();
+            RootOrder root = new RootOrder();
+           // var url = "http://sandbox-api.anymarket.com.br/v2/orders?limit=30";
+            var url = "http://api.anymarket.com.br/v2/orders?status=INVOICED?limit=30&page=1";
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+            httpWebRequest.Headers.Add("gumgaToken", "259025663L259027832E1628947780001C153563578000100O1.I"); //"L31103086G1570648571245R-250576705");
             httpWebRequest.ContentType = "application/json";
 
             httpWebRequest.Method = "GET";
@@ -82,13 +138,26 @@ namespace integraAnyMarket
                     var result = streamReader.ReadToEnd();
                     result = result.Replace("content", "orders");
                     root = JsonConvert.DeserializeObject<RootOrder>(result);
+
+                    lstPages.Add(root);
+                    foreach (Link l in root.links) {
+                        if (l.rel == "Next")
+                        {
+                            RootOrder rootOrder = GetPedidos(l.href);
+                            lstPages.Add(rootOrder);
+                        }
+                    }
+
+                    
+                    
                 }
+
             }
             catch (Exception ex)
             {
                 string message = ex.Message;
             }
-            return root;
+            return lstPages;
         }
 
         public void SetStock(List<SetStock> lstSetStock)

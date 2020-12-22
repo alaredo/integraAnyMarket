@@ -30,6 +30,8 @@ namespace integraAnyMarket
         {
             this.order = order;
             propertyGrid1.SelectedObject = order;
+            propertyGrid2.SelectedObject = order.buyer;
+            propertyGrid3.SelectedObject = order.shipping;
         }
 
         private void button1_Click(object sender, EventArgs e)
