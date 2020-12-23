@@ -409,12 +409,12 @@ namespace integraAnyMarket
 
             foreach (Item i in order.items )
             {
-                string cod_produto = i.idInMarketPlace;
+                string cod_produto = i.sku.partnerId;
                 Item it = i;
-                Prod_aux prodAux =  buscaProdutoCodigo(it.idInMarketPlace, ref it);
+                Prod_aux prodAux =  buscaProdutoCodigo(it.sku.partnerId, ref it);
 
                 
-                if ((i.idInMarketPlace != prodAux.Codigo) && (prodAux.Codigo != null))
+                if ((prodAux.Codigo != null))
                     cod_produto = prodAux.Codigo;
 
                 string strQuery = $"select * from tb_produtos where id_produto = '{cod_produto}'";
@@ -427,7 +427,7 @@ namespace integraAnyMarket
                     return retorno;
                 }
 
-
+                 i.sku.partnerId = cod_produto;
 
             }
 
@@ -450,9 +450,8 @@ namespace integraAnyMarket
 
                 BuscaVendedor(order);
                 if (id_vendedor == "755873") {
-                    int length = order.marketPlaceNumber.Length;
-                    order.marketPlaceNumber = order.marketPlaceNumber.Substring(0, length - 2);
-                    order.marketPlaceNumber = "0" + order.marketPlaceNumber.Substring(0, 1) + "-" + order.marketPlaceNumber.Substring(1, length - 2);
+                    //order.marketPlaceNumber = order.marketPlaceId.Replace("Lojas Americanas", "01");
+                    order.marketPlaceNumber = order.marketPlaceId.Replace("Lojas Americanas-", "");
                 }
 
                 if ((order.buyer.documentType == "CPF"))
@@ -490,7 +489,7 @@ namespace integraAnyMarket
                         {
                             updateEndereco(2, id_localidade, entrega.street, entrega.number, entrega.comment, entrega.neighborhood, entrega.zipCode, cmd);
                         } else {
-                            insertEndereco(2, id_localidade, entrega.street, entrega.number, entrega.address, entrega.neighborhood, entrega.zipCode, cmd);
+                            insertEndereco(2, id_localidade, entrega.street, entrega.number, entrega.comment, entrega.neighborhood, entrega.zipCode, cmd);
                         } 
 
                         BuscaVendedor(order);
@@ -532,7 +531,7 @@ namespace integraAnyMarket
                     }
                     else
                     {
-                        insertEndereco(1, id_localidade, entrega.street, entrega.number, entrega.address, entrega.neighborhood, entrega.zipCode, cmd);
+                        insertEndereco(1, id_localidade, entrega.street, entrega.number, entrega.comment, entrega.neighborhood, entrega.zipCode, cmd);
                     }
                     BuscaVendedor(order);
                     insertClientes(cmd);
@@ -542,13 +541,11 @@ namespace integraAnyMarket
                 CadastraItemOrcamento(order, idPedido, cmd);
                 setObservacao(idPedido, order.marketPlaceNumber, order, cmd);
 
-                // pedido_1.SavePedido(pedido_1)
 
                 myTrans.Commit();
-                //order.statusSiad = "Importado";
+                
                 retorno = true;
-                // SaveOrderFileOk(order);
-
+                
                 setPedLog(order.marketPlaceNumber, order.marketPlaceNumber, JsonConvert.SerializeObject(order), "Sucesso", id_marketPlace, "1");
             }
             catch (Exception ex)
@@ -890,7 +887,7 @@ namespace integraAnyMarket
             pedidoBel.tipo_endereco = "Entrega";
             pedidoBel.ds_logradouro = entrega.street;
             pedidoBel.ds_numero = entrega.number;
-            pedidoBel.ds_complemento = entrega.address;
+            pedidoBel.ds_complemento = entrega.comment;
             pedidoBel.ds_bairro = entrega.neighborhood;
             pedidoBel.cd_CEP = entrega.zipCode;
             pedidoBel.vl_total = pedido.total;
@@ -961,34 +958,37 @@ namespace integraAnyMarket
 
             foreach ( Item item in pedido.items )
             {
-                String cod = item.idInMarketPlace;
+                String cod = item.sku.partnerId;
 
                 if (cod.IndexOf('-') > -1)
                 {
-                    string aux = item.idInMarketPlace;
-                    item.idInMarketPlace = item.idInMarketPlace.Substring(0, cod.IndexOf('-'));
+                    string aux = item.sku.partnerId;
+                    item.sku.partnerId = item.sku.partnerId.Substring(0, cod.IndexOf('-'));
                     item.cd_produto = aux.Substring(cod.IndexOf('-'), aux.Length);
                 }
 
-                string query = $"SELECT id_Produto, cd_Para FROM tb_ProdDePara WHERE cd_De = '{item.idInMarketPlace}'";
+                string query = $"SELECT id_Produto, cd_Para FROM tb_ProdDePara WHERE cd_De = '{item.sku.partnerId}'";
                 DataTable dtCheckItem = Load(query);
                 if (dtCheckItem.Rows.Count > 0)
                 {
                     if (dtCheckItem.Rows[0]["id_produto"].ToString() == "")
-                        item.idInMarketPlace = dtCheckItem.Rows[0]["cd_Para"].ToString();
+                        item.sku.partnerId = dtCheckItem.Rows[0]["cd_Para"].ToString();
                     else
-                        item.idInMarketPlace = dtCheckItem.Rows[0]["id_produto"].ToString();
+                        item.sku.partnerId = dtCheckItem.Rows[0]["id_produto"].ToString();
                 }
 
 
                 Item it = item;
-                p_aux = buscaProdutoCodigo(item.idInMarketPlace, ref it);
+                p_aux = buscaProdutoCodigo(item.sku.partnerId, ref it);
 
             }
 
 
             pedidoBel.cd_agrupa = p_aux.Descricao + " " + p_aux.Codigo;
             pedidoBel.id_Any = pedido.id.ToString();
+            pedidoBel.shipidml = pedido.shippingOptionId;
+            pedidoBel.dt_aprov = pedido.paymentDate.ToString();
+            pedidoBel.dt_prev = pedido.shipping.promisedShippingTime.ToString();
             pedidoBel.id_marketplace = id_marketPlace;
             pedidoBel.vl_fretePF = 0;
             pedidoBel.cd_pedorg2 = pedido.subChannel;
@@ -1007,7 +1007,7 @@ namespace integraAnyMarket
                 PedidoItemBd itemPedido = new PedidoItemBd();
 
                 itemPedido.id_pedido = idPedido;
-                itemPedido.id_produto = item.idInMarketPlace;
+                itemPedido.id_produto = item.sku.partnerId;
                 itemPedido.cd_ez = 0;
                 itemPedido.ds_produto = item.product.title;
                 itemPedido.ds_unidade = "UN";
@@ -1133,35 +1133,35 @@ namespace integraAnyMarket
 
         public Prod_aux buscaProdutoCodigo(string sku, ref Item item )
         {
-
-            String cod = item.idInMarketPlace;
+            
+            String cod = item.sku.partnerId;
             int pos_tracinho = cod.IndexOf('-');
             if (pos_tracinho > -1)
             {
-                string aux = item.idInMarketPlace;
-                item.idInMarketPlace = item.idInMarketPlace.Substring(0, cod.IndexOf('-'));
+                string aux = item.sku.partnerId;
+                item.sku.partnerId = item.sku.partnerId.Substring(0, cod.IndexOf('-'));
                 item.cd_produto = aux.Substring(pos_tracinho, aux.Length - pos_tracinho);
             }
 
-            string query = $"SELECT id_Produto, cd_Para FROM tb_ProdDePara WHERE cd_De = '{item.idInMarketPlace}'";
+            string query = $"SELECT id_Produto, cd_Para FROM tb_ProdDePara WHERE cd_De = '{item.sku.partnerId}'";
             DataTable dtCheckItem = Load(query);
             if (dtCheckItem.Rows.Count > 0)
             {
                 if (dtCheckItem.Rows[0]["id_produto"].ToString() == "")
-                    item.idInMarketPlace = dtCheckItem.Rows[0]["cd_Para"].ToString();
+                    item.sku.partnerId = dtCheckItem.Rows[0]["cd_Para"].ToString();
                 else
-                    item.idInMarketPlace = dtCheckItem.Rows[0]["id_produto"].ToString();
+                    item.sku.partnerId = dtCheckItem.Rows[0]["id_produto"].ToString();
             }
 
 
 
 
             Prod_aux prod = new Prod_aux();
-            string queryString = Convert.ToString("SELECT a.id_produto, a.ds_produto FROM tb_produtos a WHERE a.cd_fabricante = '") + item.idInMarketPlace + "'";
+            string queryString = Convert.ToString("SELECT a.id_produto, a.ds_produto FROM tb_produtos a WHERE a.cd_fabricante = '") + item.sku.partnerId + "'";
             DataTable dtFabricante = Load(queryString);
             if (dtFabricante.Rows.Count == 0)
             {
-                queryString = Convert.ToString("SELECT a.id_produto, a.ds_produto FROM tb_produtos a WHERE a.id_produto = ") + item.idInMarketPlace;
+                queryString = Convert.ToString("SELECT a.id_produto, a.ds_produto FROM tb_produtos a WHERE a.id_produto = ") + item.sku.partnerId;
                 DataTable dtProduto = Load(queryString);
                 if (dtProduto.Rows.Count == 0)
                 {

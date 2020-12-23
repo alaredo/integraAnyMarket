@@ -91,7 +91,7 @@ namespace integraAnyMarket
             string strQuery = $"SELECT id_apiped, dt_proc, id_ped, id_psp, cd_json, ds_ret, status FROM tb_apiped " +
                 $"where TRUNC(dt_proc) >= to_Date('{dt1.ToString("dd/MM/yyyy")}', 'DD/MM/YYYY') " +
                 $"and TRUNC(dt_proc) <= to_Date('{dt2.ToString("dd/MM/yyyy")}', 'DD/MM/YYYY' ) " +
-                $"and status = {strStatus}";
+                $"and status = {strStatus} order by id_apiped DESC";
 
 
             Db db = new Db();

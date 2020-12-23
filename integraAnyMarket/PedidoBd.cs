@@ -154,6 +154,10 @@ namespace integraAnyMarket
             addParameter("p_cd_Agrupa", OracleType.VarChar, 120, 0, cmd);
             addParameter("p_cd_CST060", OracleType.Double, 1, 0, cmd);
             addParameter("p_id_Any", OracleType.VarChar, 30, id_Any, cmd);
+            addParameter("p_cd_ShipIdMl", OracleType.VarChar, 30, shipidml, cmd);
+            addParameter("p_dt_aprov", OracleType.VarChar, 30, dt_aprov, cmd);
+            addParameter("p_dt_prev", OracleType.VarChar, 30, dt_prev, cmd);
+
 
             cmd.ExecuteNonQuery();
             id_pedido = Convert.ToInt32(retval.Value);
@@ -166,6 +170,12 @@ namespace integraAnyMarket
         public string cd_agrupa { get; set; }
 
         public string id_Any { get; set; }
+
+        public string shipidml { get; set; }
+
+        public string dt_aprov { get; set; }
+        public string dt_prev { get; set; }
+
 
         public object ped2
         {

@@ -54,6 +54,8 @@ namespace integraAnyMarket
         public int idAccount { get; set; }
         public bool fulfillment { get; set; }
         public string subChannel { get; set; }
+
+        public string shippingOptionId { get; set; }
     }
 
     public class Shipping
@@ -71,6 +73,8 @@ namespace integraAnyMarket
         public string zipCode { get; set; }
         public string receiverName { get; set; }
         public string comment { get; set; }
+
+        public string reference { get; set; }
         public DateTime promisedShippingTime { get; set; }
     }
 
