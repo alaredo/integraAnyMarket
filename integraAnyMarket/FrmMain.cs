@@ -26,6 +26,21 @@ namespace integraAnyMarket
         private void Button4_Click(object sender, EventArgs e)
         {
             label3.Text = "Pedidos Faturados";
+            dataGridView1.DataSource = null;
+
+            this.Cursor = Cursors.WaitCursor;
+            Db db = new Db();
+            DataTable dt = db.LoadFaturados();
+            
+            foreach (DataRow dr in dt.Rows)
+            {
+                AnyFaturados faturado = new AnyFaturados();
+                faturado.order_id = dr["ORDER_ID"].ToString();
+                faturado.invoice = dr["STATUS"].ToString();
+            }
+
+            this.Cursor = Cursors.Default;
+
         }
 
         private void CmdProd1_Click(object sender, EventArgs e)

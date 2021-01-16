@@ -189,5 +189,129 @@ namespace integraAnyMarket
                 }
             //}
         }
+
+        public void SetFaturado(string id_order, AnyFaturados faturado)
+        {
+            //foreach (SetStock setStock in lstSetStock)
+            //{
+            var url = "http://sandbox-api.anymarket.com.br/v2/orders/id_order?gumgaToken=L31103086G1570648571245R-250576705";
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+            httpWebRequest.ContentType = "application/json";
+            httpWebRequest.Method = "PUT";
+
+            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            {
+                string json = JsonConvert.SerializeObject(faturado);
+
+                streamWriter.Write(json);
+            }
+            try
+            {
+                var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                {
+                    var result = streamReader.ReadToEnd();
+                }
+            }
+            catch (Exception ex)
+            {
+                string msg = ex.Message;
+                Log.Set($"Erro Set Faturado: {ex.Message}");
+            }
+            //}
+        }
+
+        public void SetEnviado(string id_order, AnyTransito transito)
+        {
+            //foreach (SetStock setStock in lstSetStock)
+            //{
+            var url = "http://sandbox-api.anymarket.com.br/v2/orders/id_order?gumgaToken=L31103086G1570648571245R-250576705";
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+            httpWebRequest.ContentType = "application/json";
+            httpWebRequest.Method = "PUT";
+
+            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            {
+                string json = JsonConvert.SerializeObject(transito);
+
+                streamWriter.Write(json);
+            }
+            try
+            {
+                var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                {
+                    var result = streamReader.ReadToEnd();
+                }
+            }
+            catch (Exception ex)
+            {
+                string msg = ex.Message;
+                Log.Set($"Erro Set Transito: {ex.Message}");
+            }
+            //}
+        }
+
+        public void SetEntregue(string id_order, AnyEntregue entregue)
+        {
+            //foreach (SetStock setStock in lstSetStock)
+            //{
+            var url = "http://sandbox-api.anymarket.com.br/v2/orders/id_order?gumgaToken=L31103086G1570648571245R-250576705";
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+            httpWebRequest.ContentType = "application/json";
+            httpWebRequest.Method = "PUT";
+
+            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            {
+                string json = JsonConvert.SerializeObject(entregue);
+
+                streamWriter.Write(json);
+            }
+            try
+            {
+                var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                {
+                    var result = streamReader.ReadToEnd();
+                }
+            }
+            catch (Exception ex)
+            {
+                string msg = ex.Message;
+                Log.Set($"Erro Set Entregue: {ex.Message}");
+            }
+            //}
+        }
+
+        public void SetConcluido(string id_order, AnyConcluido concluido)
+        {
+            //foreach (SetStock setStock in lstSetStock)
+            //{
+            var url = "http://sandbox-api.anymarket.com.br/v2/orders/id_order?gumgaToken=L31103086G1570648571245R-250576705";
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+            httpWebRequest.ContentType = "application/json";
+            httpWebRequest.Method = "PUT";
+
+            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            {
+                string json = JsonConvert.SerializeObject(concluido);
+
+                streamWriter.Write(json);
+            }
+            try
+            {
+                var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                {
+                    var result = streamReader.ReadToEnd();
+                }
+            }
+            catch (Exception ex)
+            {
+                string msg = ex.Message;
+                Log.Set($"Erro Set Concluido: {ex.Message}");
+            }
+            //}
+        }
     }
 }

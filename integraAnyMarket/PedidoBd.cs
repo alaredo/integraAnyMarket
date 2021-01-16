@@ -151,7 +151,7 @@ namespace integraAnyMarket
             addParameter("P_VL_ALICMSFCP", OracleType.Double, 1, 0, cmd);
             addParameter("P_VL_OD", OracleType.Double, 1, 0, cmd);
             addParameter("p_cd_Origem", OracleType.VarChar, 25, cd_origem, cmd);
-            addParameter("p_cd_Agrupa", OracleType.VarChar, 120, 0, cmd);
+            addParameter("p_cd_Agrupa", OracleType.VarChar, 120, cd_agrupa, cmd);
             addParameter("p_cd_CST060", OracleType.Double, 1, 0, cmd);
             addParameter("p_id_Any", OracleType.VarChar, 30, id_Any, cmd);
             addParameter("p_cd_ShipIdMl", OracleType.VarChar, 30, shipidml, cmd);

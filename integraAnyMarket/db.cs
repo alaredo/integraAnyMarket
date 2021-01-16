@@ -69,9 +69,69 @@ namespace integraAnyMarket
             }
         }
 
+        public DataTable LoadFaturados()
+        {
+            DataTable dataTable = new DataTable();
+            bool ret = true;
+            try
+            {
+                string queryString = @"SELECT b.id_ANY AS ORDER_ID, 'INVOICED' AS STATUS, a.cd_Serie AS SERIES, a.cd_NF AS NUMBER, cd_Chave AS ACCESSKEY, 1, a.data 
+                                        FROM tb_NFS01 a, tb_PS01 b, tb_APIFat c
+                                        WHERE a.id_Pedido = b.id_Pedido
+                                        AND a.id_NFS01 = c.id_NFS01
+                                        AND c.Status = 0 ";
+                dataTable = Load(queryString);
+            }
+            catch (Exception ex)
+            {
+                string message = ex.Message;
+
+            }
+            return dataTable;
+        }
+
+        public DataTable LoadEnviados()
+        {
+            DataTable dataTable = new DataTable();
+            bool ret = true;
+            try
+            {
+                string queryString = @"SELECT b.id_ANY, 'PAID_WAITING_DELIVERY', c.dt_Lanc, a.dt_Exped, b.dt_Prev,
+                                           d.ds_Responsavel, d.ds_Comentario
+                                            FROM tb_NFS01 a, tb_PS01 b, tb_APIEnv c, tb_Transportadoras d
+                                            WHERE a.id_Pedido = b.id_Pedido AND a.id_NFS01 = c.id_NFS01 AND a.id_Transportadora = d.id_Pessoa
+                                            AND c.Status = 0";
+                dataTable = Load(queryString);
+            }
+            catch (Exception ex)
+            {
+                string message = ex.Message;
+
+            }
+            return dataTable;
+        }
+
+        public DataTable LoadEntregues()
+        {
+            DataTable dataTable = new DataTable();
+            bool ret = true;
+            try
+            {
+                string queryString = @"SELECT b.id_ANY, 'CONCLUDED', c.dt_Lanc, a.dt_Entrega
+                                            FROM tb_NFS01 a, tb_PS01 b, tb_APIEnt c 
+                                            WHERE a.id_Pedido = b.id_Pedido AND a.id_NFS01 = c.id_NFS01 
+                                            AND c.Status = 0";
+                dataTable = Load(queryString);
+            }
+            catch (Exception ex)
+            {
+                string message = ex.Message;
+
+            }
+            return dataTable;
+        }
 
 
-       
 
 
         public DataTable LoadProdutos()
@@ -980,11 +1040,11 @@ namespace integraAnyMarket
 
                 Item it = item;
                 p_aux = buscaProdutoCodigo(item.sku.partnerId, ref it);
-
+                pedidoBel.cd_agrupa = p_aux.Descricao + " " + p_aux.Codigo;
             }
 
 
-            pedidoBel.cd_agrupa = p_aux.Descricao + " " + p_aux.Codigo;
+          //  pedidoBel.cd_agrupa = p_aux.Descricao + " " + p_aux.Codigo;
             pedidoBel.id_Any = pedido.id.ToString();
             pedidoBel.shipidml = pedido.shippingOptionId;
             pedidoBel.dt_aprov = pedido.paymentDate.ToString();

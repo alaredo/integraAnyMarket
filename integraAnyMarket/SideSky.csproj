@@ -50,8 +50,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AnyConcluido.cs" />
+    <Compile Include="AnyEntregue.cs" />
+    <Compile Include="AnyFaturados.cs" />
     <Compile Include="AnyMarket.cs" />
     <Compile Include="AnyMarketClass.cs" />
+    <Compile Include="AnyTransito.cs" />
     <Compile Include="Db.cs" />
     <Compile Include="ErpBridge.cs" />
     <Compile Include="Form1.cs">
