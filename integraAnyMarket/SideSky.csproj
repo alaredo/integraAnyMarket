@@ -53,6 +53,7 @@
     <Compile Include="AnyConcluido.cs" />
     <Compile Include="AnyEntregue.cs" />
     <Compile Include="AnyFaturados.cs" />
+    <Compile Include="AnyFeed.cs" />
     <Compile Include="AnyMarket.cs" />
     <Compile Include="AnyMarketClass.cs" />
     <Compile Include="AnyTransito.cs" />

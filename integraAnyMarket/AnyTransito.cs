@@ -16,9 +16,9 @@ namespace integraAnyMarket
 
     public class Tracking
     {
-        public DateTime date { get; set; }
-        public DateTime shippedDate { get; set; }
-        public DateTime estimateDate { get; set; }
+        public string date { get; set; }
+        public string shippedDate { get; set; }
+        public string estimateDate { get; set; }
         public string carrier { get; set; }
         public string number { get; set; }
         public string url { get; set; }

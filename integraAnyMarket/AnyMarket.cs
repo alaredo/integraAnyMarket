@@ -12,39 +12,26 @@ namespace integraAnyMarket
 {
     public class AnyMarket
     {
-        /*public RootObject GetCategories()
-        {
-            RootObject root = new RootObject();
-            var url = "http://sandbox-api.anymarket.com.br/v2/categories";
-            var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
-            httpWebRequest.Headers.Add("gumgaToken", "L31103086G1570648571245R-250576705");
-            httpWebRequest.ContentType = "application/json";
+        string token_sandBox = "L31103086G1570648571245R-250576705";
+        string token_oficial = "259025663L259027832E1628947780001C153563578000100O1.I";
+        string token;
 
-            httpWebRequest.Method = "GET";
-            try
-            {
-                var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
-                {
-                    var result = streamReader.ReadToEnd();
-                    
-                    root = JsonConvert.DeserializeObject<RootObject>(result);
-                }
-            }
-            catch (Exception ex)
-            {
-                string message = ex.Message;
-            }
-            return root;
+        string baseUrl_sandBox = "http://sandbox-api.anymarket.com.br/v2/";
+        string baseUrl_oficial = "http://api.anymarket.com.br/v2/";
+        string baseUrl;
+
+        public AnyMarket()
+        {
+            token = token_sandBox;
+            baseUrl = baseUrl_sandBox;
         }
-        */
 
         public RootProduto GetProdutos()
         {
             RootProduto root = new RootProduto();
-            var url = "http://sandbox-api.anymarket.com.br/v2/products?limit=30";
+            var url = baseUrl + "products?limit=30";
             var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
-            httpWebRequest.Headers.Add("gumgaToken", "L31103086G1570648571245R-250576705");
+            httpWebRequest.Headers.Add("gumgaToken", token);
             httpWebRequest.ContentType = "application/json";
 
             httpWebRequest.Method = "GET";
@@ -67,13 +54,53 @@ namespace integraAnyMarket
         }
 
         public List<RootOrder> lstPages = new List<RootOrder>();
-        public RootOrder GetPedidos(string url)
+
+
+        public AnyFeed GetFeed()
         {
-            
-            RootOrder root = new RootOrder();
-            // var url = "http://sandbox-api.anymarket.com.br/v2/orders?limit=30";
+            AnyFeed feed = new AnyFeed();
+            var url = baseUrl + "orders/feeds";
             var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
-            httpWebRequest.Headers.Add("gumgaToken", "259025663L259027832E1628947780001C153563578000100O1.I"); //"L31103086G1570648571245R-250576705");
+            httpWebRequest.Headers.Add("gumgaToken", token);
+            httpWebRequest.ContentType = "application/json";
+
+            httpWebRequest.Method = "GET";
+            try
+            {
+                var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                {
+                    var resultFeed = streamReader.ReadToEnd();
+                    String result = "{\"lstFeed\": " + Convert.ToString(resultFeed) + "}";
+                    // result = result.Replace("content", "produtos");
+                    feed = JsonConvert.DeserializeObject<AnyFeed>(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                string message = ex.Message;
+                Log.Set(ex.Message);
+            }
+            return feed;
+        }
+
+        public RootOrder GetPedido(string Id)
+        {
+            string Url = $"{baseUrl}orders/"+Id;
+            return GetPedidos(Url, true);
+        }
+
+        public RootOrder GetPedidos(Boolean isFeed)
+        {
+            string Url = $"{baseUrl}orders?status=PAID_WAITING_SHIP&offset=5";
+            return GetPedidos(Url, isFeed);
+        }
+
+        public RootOrder GetPedidos(string url, Boolean isFeed)
+        {
+            RootOrder root = new RootOrder();
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+            httpWebRequest.Headers.Add("gumgaToken", token); 
             httpWebRequest.ContentType = "application/json";
 
             httpWebRequest.Method = "GET";
@@ -86,7 +113,15 @@ namespace integraAnyMarket
                 {
                     var result = streamReader.ReadToEnd();
                     result = result.Replace("content", "orders");
-                    root = JsonConvert.DeserializeObject<RootOrder>(result);
+                    if (!isFeed)
+                        root = JsonConvert.DeserializeObject<RootOrder>(result);
+                    else
+                    {
+                        Order order = JsonConvert.DeserializeObject<Order>(result);
+                        root.orders = new List<Order>();
+                        root.orders.Add(order);
+                        
+                    }
 
                     lstPages.Add(root);
                     if (root.orders != null)  {
@@ -97,7 +132,6 @@ namespace integraAnyMarket
                                 if (l.rel == "next")
                                 {
                                     nextUrl = l.href;
-
                                 }
                             }
                         }
@@ -108,7 +142,7 @@ namespace integraAnyMarket
                 }
                 if ( nextUrl != "")
                 {
-                    RootOrder rootOrder = GetPedidos(nextUrl);
+                    RootOrder rootOrder = GetPedidos(nextUrl, isFeed);
                     nextUrl = "";
                 }
             }
@@ -119,14 +153,13 @@ namespace integraAnyMarket
             return root;
         }
 
-        public List<RootOrder> GetPedidos()
+        private List<RootOrder> GetPed()
         {
             List<RootOrder> lstPages = new List<RootOrder>();
             RootOrder root = new RootOrder();
-           // var url = "http://sandbox-api.anymarket.com.br/v2/orders?limit=30";
-            var url = "http://api.anymarket.com.br/v2/orders?status=INVOICED?limit=30&page=1";
+            var url = baseUrl + "orders?status=PAID_WAITING_SHIP?limit=30&page=1";
             var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
-            httpWebRequest.Headers.Add("gumgaToken", "259025663L259027832E1628947780001C153563578000100O1.I"); //"L31103086G1570648571245R-250576705");
+            httpWebRequest.Headers.Add("gumgaToken", token); 
             httpWebRequest.ContentType = "application/json";
 
             httpWebRequest.Method = "GET";
@@ -143,15 +176,11 @@ namespace integraAnyMarket
                     foreach (Link l in root.links) {
                         if (l.rel == "Next")
                         {
-                            RootOrder rootOrder = GetPedidos(l.href);
+                            RootOrder rootOrder = GetPedidos(l.href, false);
                             lstPages.Add(rootOrder);
                         }
                     }
-
-                    
-                    
                 }
-
             }
             catch (Exception ex)
             {
@@ -162,9 +191,7 @@ namespace integraAnyMarket
 
         public void SetStock(List<SetStock> lstSetStock)
         {
-            //foreach (SetStock setStock in lstSetStock)
-            //{
-                var url = "http://sandbox-api.anymarket.com.br/v2/stocks?gumgaToken=L31103086G1570648571245R-250576705";
+            var url = $"{baseUrl}stock/?gumgaToken={token}";
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
                 httpWebRequest.ContentType = "application/json";
                 httpWebRequest.Method = "PUT";
@@ -187,14 +214,41 @@ namespace integraAnyMarket
                     string msg = ex.Message;
                     Log.Set($"Erro Saldo Produto: {ex.Message}");
                 }
-            //}
+        }
+
+        public void SetPrice(List<SetStock> lstSetStock)
+        {
+            var url = $"{baseUrl}stock/?gumgaToken={token}";
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+            httpWebRequest.ContentType = "application/json";
+            httpWebRequest.Method = "PUT";
+
+            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            {
+                string json = JsonConvert.SerializeObject(lstSetStock);
+
+                streamWriter.Write(json);
+            }
+            try
+            {
+                var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                {
+                    var result = streamReader.ReadToEnd();
+                }
+            }
+            catch (Exception ex)
+            {
+                string msg = ex.Message;
+                Log.Set($"Erro Saldo Produto: {ex.Message}");
+            }
         }
 
         public void SetFaturado(string id_order, AnyFaturados faturado)
         {
             //foreach (SetStock setStock in lstSetStock)
             //{
-            var url = "http://sandbox-api.anymarket.com.br/v2/orders/id_order?gumgaToken=L31103086G1570648571245R-250576705";
+            var url = $"{baseUrl}orders/{id_order}?gumgaToken={token}";
             var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
             httpWebRequest.ContentType = "application/json";
             httpWebRequest.Method = "PUT";
@@ -223,9 +277,7 @@ namespace integraAnyMarket
 
         public void SetEnviado(string id_order, AnyTransito transito)
         {
-            //foreach (SetStock setStock in lstSetStock)
-            //{
-            var url = "http://sandbox-api.anymarket.com.br/v2/orders/id_order?gumgaToken=L31103086G1570648571245R-250576705";
+            var url = $"{baseUrl}orders/{id_order}?gumgaToken={token}";
             var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
             httpWebRequest.ContentType = "application/json";
             httpWebRequest.Method = "PUT";
@@ -249,14 +301,11 @@ namespace integraAnyMarket
                 string msg = ex.Message;
                 Log.Set($"Erro Set Transito: {ex.Message}");
             }
-            //}
         }
 
         public void SetEntregue(string id_order, AnyEntregue entregue)
         {
-            //foreach (SetStock setStock in lstSetStock)
-            //{
-            var url = "http://sandbox-api.anymarket.com.br/v2/orders/id_order?gumgaToken=L31103086G1570648571245R-250576705";
+            var url = $"{baseUrl}orders/{id_order}?gumgaToken={token}";
             var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
             httpWebRequest.ContentType = "application/json";
             httpWebRequest.Method = "PUT";
@@ -280,13 +329,10 @@ namespace integraAnyMarket
                 string msg = ex.Message;
                 Log.Set($"Erro Set Entregue: {ex.Message}");
             }
-            //}
         }
 
         public void SetConcluido(string id_order, AnyConcluido concluido)
         {
-            //foreach (SetStock setStock in lstSetStock)
-            //{
             var url = "http://sandbox-api.anymarket.com.br/v2/orders/id_order?gumgaToken=L31103086G1570648571245R-250576705";
             var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
             httpWebRequest.ContentType = "application/json";
@@ -311,7 +357,6 @@ namespace integraAnyMarket
                 string msg = ex.Message;
                 Log.Set($"Erro Set Concluido: {ex.Message}");
             }
-            //}
         }
     }
 }

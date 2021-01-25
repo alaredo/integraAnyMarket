@@ -75,7 +75,7 @@ namespace integraAnyMarket
             bool ret = true;
             try
             {
-                string queryString = @"SELECT b.id_ANY AS ORDER_ID, 'INVOICED' AS STATUS, a.cd_Serie AS SERIES, a.cd_NF AS NUMBER, cd_Chave AS ACCESSKEY, 1, a.data 
+                string queryString = @"SELECT b.id_ANY AS ORDER_ID, 'INVOICED' AS STATUS, a.cd_Serie AS SERIES, a.cd_NF AS NUMBERO, cd_Chave AS ACCESSKEY, 1, to_Char(a.data, 'YYYY-MM-DD') || 'T' || to_Char(a.data, 'HH24:MI:SS') || 'Z' as data
                                         FROM tb_NFS01 a, tb_PS01 b, tb_APIFat c
                                         WHERE a.id_Pedido = b.id_Pedido
                                         AND a.id_NFS01 = c.id_NFS01
@@ -96,8 +96,7 @@ namespace integraAnyMarket
             bool ret = true;
             try
             {
-                string queryString = @"SELECT b.id_ANY, 'PAID_WAITING_DELIVERY', c.dt_Lanc, a.dt_Exped, b.dt_Prev,
-                                           d.ds_Responsavel, d.ds_Comentario
+                string queryString = @"SELECT b.id_ANY, 'PAID_WAITING_DELIVERY', to_Char(c.dt_Lanc, 'YYYY-MM-DD') || 'T' || to_Char(c.dt_lanc, 'HH24:MI:SS') || 'Z' as dt_lanc, to_Char(a.dt_Exped, 'YYYY-MM-DD') || 'T' || to_Char(a.dt_Exped, 'HH24:MI:SS') || 'Z' as dt_Exped, to_Char(b.dt_Prev, 'YYYY-MM-DD') || 'T' || to_Char(b.dt_Prev, 'HH24:MI:SS') || 'Z' as dt_Prev, d.ds_Responsavel, d.ds_Comentario
                                             FROM tb_NFS01 a, tb_PS01 b, tb_APIEnv c, tb_Transportadoras d
                                             WHERE a.id_Pedido = b.id_Pedido AND a.id_NFS01 = c.id_NFS01 AND a.id_Transportadora = d.id_Pessoa
                                             AND c.Status = 0";
@@ -117,7 +116,7 @@ namespace integraAnyMarket
             bool ret = true;
             try
             {
-                string queryString = @"SELECT b.id_ANY, 'CONCLUDED', c.dt_Lanc, a.dt_Entrega
+                string queryString = @"SELECT b.id_ANY, 'CONCLUDED', to_Char(c.dt_Lanc, 'YYYY-MM-DD') || 'T' || to_Char(c.dt_Lanc, 'HH24:MI:SS') || 'Z' as dt_Lanc, to_Char(a.dt_Entrega, 'YYYY-MM-DD') || 'T' || to_Char(a.dt_Entrega, 'HH24:MI:SS') || 'Z' as dt_Entrega
                                             FROM tb_NFS01 a, tb_PS01 b, tb_APIEnt c 
                                             WHERE a.id_Pedido = b.id_Pedido AND a.id_NFS01 = c.id_NFS01 
                                             AND c.Status = 0";
@@ -628,6 +627,24 @@ namespace integraAnyMarket
         }
 
 
+        public void setFaturado(OracleCommand cmd)
+        {
+            cmd.Parameters.Clear();
+            cmd.CommandText = "SP_API_APIFAT_INS";
+            cmd.CommandType = CommandType.StoredProcedure;
+
+
+
+            id_transportadora = "193064";
+
+            addParameter("P_ID_PESSOA", OracleType.Double, 22, id_pessoa, cmd);
+            addParameter("P_ID_TRANSPORTADORA", OracleType.VarChar, 22, id_transportadora, cmd);
+            addParameter("P_ID_VENDEDOR", OracleType.VarChar, 22, id_vendedor, cmd);
+            addParameter("P_ID_REVENDA", OracleType.VarChar, 22, id_revenda, cmd);
+            addParameter("P_USUARIO", OracleType.VarChar, 15, "PedidosWeb", cmd);
+
+            cmd.ExecuteNonQuery();
+        }
 
 
         public string Ver_UFF(String ssU) {
@@ -1244,12 +1261,19 @@ namespace integraAnyMarket
 
         public DataTable LoadStock ( )
         {
-            string strQuery = "SELECT id_apisd, id_sku, qt_prod, status FROM tb_apisdprod";
+            string strQuery = "SELECT id_apisd, id_sku, qt_prod, status FROM tb_apisdprod where status = 0";
             DataTable dataTable = Load(strQuery);
             return dataTable;
         }
-    
-        
+
+        public DataTable LoadPrice()
+        {
+            string strQuery = "SELECT id_apisd, id_sku, qt_prod, status FROM tb_apisdprod where status = 0";
+            DataTable dataTable = Load(strQuery);
+            return dataTable;
+        }
+
+
 
         public bool CheckPedido(string pId)
         {

@@ -34,9 +34,22 @@ namespace integraAnyMarket
             
             foreach (DataRow dr in dt.Rows)
             {
+                Invoice invoice = new Invoice();
+                //b.id_ANY AS ORDER_ID, 'INVOICED' AS STATUS, a.cd_Serie AS SERIES, a.cd_NF AS NUMBER, cd_Chave AS ACCESSKEY, 1, a.data
+                 
                 AnyFaturados faturado = new AnyFaturados();
-                faturado.order_id = dr["ORDER_ID"].ToString();
-                faturado.invoice = dr["STATUS"].ToString();
+                // faturado.order_id = dr["ORDER_ID"].ToString();
+
+                faturado.status = "INVOICED";
+                invoice.number = dr["NUMBERO"].ToString();
+                invoice.series = dr["SERIES"].ToString();
+                invoice.date = dr["data"].ToString();
+                invoice.accessKey = dr["ACCESSKEY"].ToString();
+                faturado.orderInvoice = invoice;
+
+                AnyMarket anyMarket = new AnyMarket();
+                anyMarket.SetFaturado(dr["order_id"].ToString(), faturado);
+                // faturado.invoice = dr["STATUS"].ToString();
             }
 
             this.Cursor = Cursors.Default;
@@ -163,7 +176,6 @@ namespace integraAnyMarket
 
         private void CmdPed1_Click(object sender, EventArgs e)
         {
-
             label3.Text = "Pedidos Pagos";
             dataGridView1.DataSource = null;
 
@@ -186,12 +198,66 @@ namespace integraAnyMarket
         private void Button3_Click(object sender, EventArgs e) 
         {
             label3.Text = "Pedidos Enviados";
+            dataGridView1.DataSource = null;
+
+            this.Cursor = Cursors.WaitCursor;
+            Db db = new Db();
+            DataTable dt = db.LoadEnviados();
+
+            foreach (DataRow dr in dt.Rows)
+            {
+                Invoice invoice = new Invoice();
+               // SELECT b.id_ANY, 'PAID_WAITING_DELIVERY', c.dt_Lanc, a.dt_Exped, b.dt_Prev,
+               //                            d.ds_Responsavel, d.ds_Comentario
+                AnyTransito transito = new AnyTransito();
+                transito.order_id = dr["id_ANY"].ToString();
+                transito.status = "PAID_WAITING_DELIVERY";
+
+                Tracking tracking = new Tracking();
+                tracking.date = dr["dt_Lanc"].ToString();
+                tracking.number = dr["id_any"].ToString();
+                tracking.shippedDate = dr["dt_Exped"].ToString();
+                tracking.estimateDate = dr["dt_Prev"].ToString();
+                tracking.carrier = dr["ds_Responsavel"].ToString();
+                tracking.url = dr["ds_Comentario"].ToString();
+
+                transito.tracking = tracking;
+                AnyMarket anyMarket = new AnyMarket();
+                anyMarket.SetEnviado(transito.order_id, transito);
+               
+            }
+
+            this.Cursor = Cursors.Default;
         }
 
         private void Button5_Click(object sender, EventArgs e)
         {
             
             label3.Text = "Pedidos Entregues";
+            dataGridView1.DataSource = null;
+
+            this.Cursor = Cursors.WaitCursor;
+            Db db = new Db();
+            DataTable dt = db.LoadEntregues();
+
+            foreach (DataRow dr in dt.Rows)
+            {
+                Invoice invoice = new Invoice();
+                // SELECT b.id_ANY, 'PAID_WAITING_DELIVERY', c.dt_Lanc, a.dt_Exped, b.dt_Prev,
+                //                            d.ds_Responsavel, d.ds_Comentario
+                AnyEntregue entregue = new AnyEntregue();
+                entregue.status = "CONCLUDED";
+
+                TrackingEntregue tracking = new TrackingEntregue();
+                tracking.deliveredDate = dr["dt_Entrega"].ToString();
+
+                entregue.tracking = tracking;
+                AnyMarket anyMarket = new AnyMarket();
+                anyMarket.SetEntregue(dr["id_any"].ToString(), entregue);
+
+            }
+
+            this.Cursor = Cursors.Default;
         }
 
         private void button7_Click(object sender, EventArgs e)

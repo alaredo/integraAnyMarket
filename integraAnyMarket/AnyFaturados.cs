@@ -9,18 +9,18 @@ namespace integraAnyMarket
 
     public class AnyFaturados
     {
-        public string order_id { get; set; }
+     //   public string order_id { get; set; }
         public string status { get; set; }
-        public Invoice invoice { get; set; }
+        public Invoice orderInvoice { get; set; }
     }
 
     public class Invoice
     {
+        public string accessKey { get; set; }
         public string series { get; set; }
         public string number { get; set; }
-        public string accessKey { get; set; }
-        public int installments { get; set; }
-        public DateTime date { get; set; }
+        public string date { get; set; }
+        
     }
 
 }

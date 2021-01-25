@@ -10,7 +10,7 @@ namespace integraAnyMarket
     public class RootOrder
     {
         public Link[] links { get; set; }
-        public Order[] orders { get; set; }
+        public List<Order> orders { get; set; }
         public Page page { get; set; }
     }
 
@@ -151,5 +151,8 @@ namespace integraAnyMarket
         public int amount { get; set; }
         public string stockName { get; set; }
     }
+
+
+
 
 }
