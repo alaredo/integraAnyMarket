@@ -20,6 +20,10 @@ namespace integraAnyMarket
         public string series { get; set; }
         public string number { get; set; }
         public string date { get; set; }
+
+        public string cfop { get; set; }
+        
+        public string companyStateTaxId { get; set; }
         
     }
 

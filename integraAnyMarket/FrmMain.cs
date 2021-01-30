@@ -45,15 +45,52 @@ namespace integraAnyMarket
                 invoice.series = dr["SERIES"].ToString();
                 invoice.date = dr["data"].ToString();
                 invoice.accessKey = dr["ACCESSKEY"].ToString();
+                invoice.cfop = dr["cd_cfop"].ToString();
+                invoice.companyStateTaxId = dr["cd_ie"].ToString();
                 faturado.orderInvoice = invoice;
 
                 AnyMarket anyMarket = new AnyMarket();
-                anyMarket.SetFaturado(dr["order_id"].ToString(), faturado);
-                // faturado.invoice = dr["STATUS"].ToString();
+                if ( anyMarket.SetFaturado(dr["order_id"].ToString(), faturado))
+                {
+                    if (dr["ds_xml"].ToString() != "")
+                    {
+                        anyMarket.PutXML(dr["ds_xml"].ToString(), dr["ds_xml"].ToString());
+                    } else {
+                        String xml = getXmlStr(dr["ACCESSKEY"].ToString() + "-procNFe.xml");
+                        if (xml != "")
+                        {
+                            anyMarket.PutXML(dr["order_id"].ToString(), xml);
+                        }
+                    }
+                    db.setFaturado(dr["id_nfs01"].ToString(), "200", "sucesso", "1");
+                } else
+                {
+                    db.setFaturado(dr["id_nfs01"].ToString(), "400", "erro", "2");
+                }
             }
-
+            dataGridView1.DataSource = dt;
             this.Cursor = Cursors.Default;
 
+        }
+
+        private String getXmlStr(string name)
+        {
+            String ret = "";
+            try
+            {
+                string[] lines = System.IO.File.ReadAllLines(@"C:\sideErp\xmlp\" + name);
+                foreach (string line in lines)
+                {
+                    // Use a tab to indent each line of the file.
+                    // Console.WriteLine("\t" + line);
+                    ret += String.Format("\t" + line);
+                }
+            } catch ( Exception ex)
+            {
+                ret = "";
+                Log.Set(ex.Message);
+            }
+            return ret;
         }
 
         private void CmdProd1_Click(object sender, EventArgs e)
@@ -193,6 +230,7 @@ namespace integraAnyMarket
             label3.Text = "Atualizar Estoque";
             ErpBridge erpBridge = new ErpBridge();
             erpBridge.processaEstoque();
+
         }
 
         private void Button3_Click(object sender, EventArgs e) 
@@ -207,8 +245,8 @@ namespace integraAnyMarket
             foreach (DataRow dr in dt.Rows)
             {
                 Invoice invoice = new Invoice();
-               // SELECT b.id_ANY, 'PAID_WAITING_DELIVERY', c.dt_Lanc, a.dt_Exped, b.dt_Prev,
-               //                            d.ds_Responsavel, d.ds_Comentario
+                // SELECT b.id_ANY, 'PAID_WAITING_DELIVERY', c.dt_Lanc, a.dt_Exped, b.dt_Prev,
+                //                            d.ds_Responsavel, d.ds_Comentario
                 AnyTransito transito = new AnyTransito();
                 transito.order_id = dr["id_ANY"].ToString();
                 transito.status = "PAID_WAITING_DELIVERY";
@@ -223,16 +261,21 @@ namespace integraAnyMarket
 
                 transito.tracking = tracking;
                 AnyMarket anyMarket = new AnyMarket();
-                anyMarket.SetEnviado(transito.order_id, transito);
+                if (anyMarket.SetEnviado(transito.order_id, transito))
+                {
+                    db.setEnviado(dr["id_nfs01"].ToString(), "200", "sucesso", "1");
+                } else
+                {
+                    db.setEnviado(dr["id_nfs01"].ToString(), "400", "erro", "2");
+                }
                
             }
-
+            dataGridView1.DataSource = dt;
             this.Cursor = Cursors.Default;
         }
 
         private void Button5_Click(object sender, EventArgs e)
         {
-            
             label3.Text = "Pedidos Entregues";
             dataGridView1.DataSource = null;
 
@@ -253,10 +296,17 @@ namespace integraAnyMarket
 
                 entregue.tracking = tracking;
                 AnyMarket anyMarket = new AnyMarket();
-                anyMarket.SetEntregue(dr["id_any"].ToString(), entregue);
+                if (anyMarket.SetEntregue(dr["id_any"].ToString(), entregue))
+                {
+                    db.setEntregue(dr["id_nfs01"].ToString(), "200", "sucesso", "1");
+                }
+                else
+                {
+                    db.setEntregue(dr["id_nfs01"].ToString(), "400", "erro", "2");
+                }
 
             }
-
+            dataGridView1.DataSource = dt;
             this.Cursor = Cursors.Default;
         }
 

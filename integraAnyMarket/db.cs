@@ -75,7 +75,7 @@ namespace integraAnyMarket
             bool ret = true;
             try
             {
-                string queryString = @"SELECT b.id_ANY AS ORDER_ID, 'INVOICED' AS STATUS, a.cd_Serie AS SERIES, a.cd_NF AS NUMBERO, cd_Chave AS ACCESSKEY, 1, to_Char(a.data, 'YYYY-MM-DD') || 'T' || to_Char(a.data, 'HH24:MI:SS') || 'Z' as data
+                string queryString = @"SELECT b.id_ANY AS ORDER_ID, 'INVOICED' AS STATUS, a.cd_Serie AS SERIES, a.cd_NF AS NUMBERO, cd_Chave AS ACCESSKEY, 1, to_Char(a.data, 'YYYY-MM-DD') || 'T' || to_Char(a.data, 'HH24:MI:SS') || 'Z' as data, a.id_NFS01, c.cd_cfop, c.ds_xml, c.cd_ie
                                         FROM tb_NFS01 a, tb_PS01 b, tb_APIFat c
                                         WHERE a.id_Pedido = b.id_Pedido
                                         AND a.id_NFS01 = c.id_NFS01
@@ -96,7 +96,7 @@ namespace integraAnyMarket
             bool ret = true;
             try
             {
-                string queryString = @"SELECT b.id_ANY, 'PAID_WAITING_DELIVERY', to_Char(c.dt_Lanc, 'YYYY-MM-DD') || 'T' || to_Char(c.dt_lanc, 'HH24:MI:SS') || 'Z' as dt_lanc, to_Char(a.dt_Exped, 'YYYY-MM-DD') || 'T' || to_Char(a.dt_Exped, 'HH24:MI:SS') || 'Z' as dt_Exped, to_Char(b.dt_Prev, 'YYYY-MM-DD') || 'T' || to_Char(b.dt_Prev, 'HH24:MI:SS') || 'Z' as dt_Prev, d.ds_Responsavel, d.ds_Comentario
+                string queryString = @"SELECT b.id_ANY, 'PAID_WAITING_DELIVERY', to_Char(c.dt_Lanc, 'YYYY-MM-DD') || 'T' || to_Char(c.dt_lanc, 'HH24:MI:SS') || 'Z' as dt_lanc, to_Char(a.dt_Exped, 'YYYY-MM-DD') || 'T' || to_Char(a.dt_Exped, 'HH24:MI:SS') || 'Z' as dt_Exped, to_Char(b.dt_Prev, 'YYYY-MM-DD') || 'T' || to_Char(b.dt_Prev, 'HH24:MI:SS') || 'Z' as dt_Prev, d.ds_Responsavel, d.ds_Comentario,  a.id_NFS01
                                             FROM tb_NFS01 a, tb_PS01 b, tb_APIEnv c, tb_Transportadoras d
                                             WHERE a.id_Pedido = b.id_Pedido AND a.id_NFS01 = c.id_NFS01 AND a.id_Transportadora = d.id_Pessoa
                                             AND c.Status = 0";
@@ -116,7 +116,7 @@ namespace integraAnyMarket
             bool ret = true;
             try
             {
-                string queryString = @"SELECT b.id_ANY, 'CONCLUDED', to_Char(c.dt_Lanc, 'YYYY-MM-DD') || 'T' || to_Char(c.dt_Lanc, 'HH24:MI:SS') || 'Z' as dt_Lanc, to_Char(a.dt_Entrega, 'YYYY-MM-DD') || 'T' || to_Char(a.dt_Entrega, 'HH24:MI:SS') || 'Z' as dt_Entrega
+                string queryString = @"SELECT b.id_ANY, 'CONCLUDED', to_Char(c.dt_Lanc, 'YYYY-MM-DD') || 'T' || to_Char(c.dt_Lanc, 'HH24:MI:SS') || 'Z' as dt_Lanc, to_Char(a.dt_Entrega, 'YYYY-MM-DD') || 'T' || to_Char(a.dt_Entrega, 'HH24:MI:SS') || 'Z' as dt_Entrega, a.id_NFS01
                                             FROM tb_NFS01 a, tb_PS01 b, tb_APIEnt c 
                                             WHERE a.id_Pedido = b.id_Pedido AND a.id_NFS01 = c.id_NFS01 
                                             AND c.Status = 0";
@@ -449,8 +449,6 @@ namespace integraAnyMarket
 
         public bool ProcessaPedido(Order order)
         {
-
-
             bool retorno;
             retorno = false;
 
@@ -627,21 +625,56 @@ namespace integraAnyMarket
         }
 
 
-        public void setFaturado(OracleCommand cmd)
+        public void setFaturado(string id_nfs01, string cd_ret, string ds_ret, string status)
         {
+            OracleConnection con = new OracleConnection(connectionString);
+            con.Open();
+            OracleCommand cmd = new OracleCommand("SP_API_APIFAT_INS", con);
+            cmd.CommandType = CommandType.StoredProcedure;
             cmd.Parameters.Clear();
             cmd.CommandText = "SP_API_APIFAT_INS";
             cmd.CommandType = CommandType.StoredProcedure;
 
+            addParameter("p_id_NFS01", OracleType.VarChar, 22, id_nfs01, cmd);
+            addParameter("p_cd_Ret", OracleType.VarChar, 22, cd_ret, cmd);
+            addParameter("p_ds_Ret", OracleType.VarChar, 22, ds_ret, cmd);
+            addParameter("p_Status", OracleType.VarChar, 22, status, cmd);
+        
+            cmd.ExecuteNonQuery();
+        }
 
+        public void setEnviado(string id_nfs01, string cd_ret, string ds_ret, string status)
+        {
+            OracleConnection con = new OracleConnection(connectionString);
+            con.Open();
+            OracleCommand cmd = new OracleCommand("SP_API_APIENV_INS", con);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.Clear();
+            cmd.CommandText = "SP_API_APIENV_INS";
+            cmd.CommandType = CommandType.StoredProcedure;
 
-            id_transportadora = "193064";
+            addParameter("p_id_NFS01", OracleType.VarChar, 22, id_nfs01, cmd);
+            addParameter("p_cd_Ret", OracleType.VarChar, 22, cd_ret, cmd);
+            addParameter("p_ds_Ret", OracleType.VarChar, 22, ds_ret, cmd);
+            addParameter("p_Status", OracleType.VarChar, 22, status, cmd);
 
-            addParameter("P_ID_PESSOA", OracleType.Double, 22, id_pessoa, cmd);
-            addParameter("P_ID_TRANSPORTADORA", OracleType.VarChar, 22, id_transportadora, cmd);
-            addParameter("P_ID_VENDEDOR", OracleType.VarChar, 22, id_vendedor, cmd);
-            addParameter("P_ID_REVENDA", OracleType.VarChar, 22, id_revenda, cmd);
-            addParameter("P_USUARIO", OracleType.VarChar, 15, "PedidosWeb", cmd);
+            cmd.ExecuteNonQuery();
+        }
+
+        public void setEntregue(string id_nfs01, string cd_ret, string ds_ret, string status)
+        {
+            OracleConnection con = new OracleConnection(connectionString);
+            con.Open();
+            OracleCommand cmd = new OracleCommand("SP_API_APIENT_INS", con);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.Clear();
+            cmd.CommandText = "SP_API_APIENT_INS";
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            addParameter("p_id_NFS01", OracleType.VarChar, 22, id_nfs01, cmd);
+            addParameter("p_cd_Ret", OracleType.VarChar, 22, cd_ret, cmd);
+            addParameter("p_ds_Ret", OracleType.VarChar, 22, ds_ret, cmd);
+            addParameter("p_Status", OracleType.VarChar, 22, status, cmd);
 
             cmd.ExecuteNonQuery();
         }
@@ -1182,8 +1215,7 @@ namespace integraAnyMarket
             }
             return dataTable;
         }
-
-
+        
         public void Execute(string query, OracleCommand cmd)
         {
             DataTable dataTable = new DataTable();
@@ -1261,9 +1293,28 @@ namespace integraAnyMarket
 
         public DataTable LoadStock ( )
         {
-            string strQuery = "SELECT id_apisd, id_sku, qt_prod, status FROM tb_apisdprod where status = 0";
+            string strQuery = "SELECT id_apisd, id_sku, qt_prod, vl_cume, status FROM tb_apisdprod where status = 0";
             DataTable dataTable = Load(strQuery);
             return dataTable;
+        }
+
+
+        public void setStock(string id_apisd, string cd_ret, string ds_ret, string status)
+        {
+            OracleConnection con = new OracleConnection(connectionString);
+            con.Open();
+            OracleCommand cmd = new OracleCommand("SP_API_SDPROD_INS", con);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.Clear();
+            cmd.CommandText = "SP_API_SDPROD_INS";
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            addParameter("p_id_APISD", OracleType.VarChar, 22, id_apisd, cmd);
+            addParameter("p_cd_Ret", OracleType.VarChar, 22, cd_ret, cmd);
+            addParameter("p_ds_Ret", OracleType.VarChar, 22, ds_ret, cmd);
+            addParameter("p_Status", OracleType.VarChar, 22, status, cmd);
+
+            cmd.ExecuteNonQuery();
         }
 
         public DataTable LoadPrice()

@@ -25,7 +25,10 @@ namespace integraAnyMarket
                     foreach (Order o in rootOrder.orders)
                     {
                         Db db = new Db();
-                        db.ProcessaPedido(o);
+                        if (db.ProcessaPedido(o))
+                        {
+                            anyMarket.PutFeed(f.id.ToString());
+                        }
                     }
                 }
             }
@@ -65,11 +68,18 @@ namespace integraAnyMarket
                 setStock.idOrigem = dr["id_apisd"].ToString();
                 setStock.partnerId = dr["id_sku"].ToString();
                 setStock.quantity = dr["qt_prod"].ToString();
+                setStock.cost = Convert.ToDecimal( dr["vl_cume"].ToString()) ;
                 lstStocks.Add(setStock);
                 AnyMarket any = new AnyMarket();
-                any.SetStock(lstStocks);
+                if (any.SetStock(lstStocks))
+                {
+                    db.setStock(setStock.idOrigem, "200", "sucesso", "1");
+                }
+                else
+                {
+                    db.setEnviado(dr["id_nfs01"].ToString(), "400", "erro", "2");
+                }
             }
-            
         }
     }
 }

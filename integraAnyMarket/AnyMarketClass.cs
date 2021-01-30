@@ -110,6 +110,8 @@ namespace integraAnyMarket
         public string idOrigem { get; set; }
         public string partnerId { get; set; }
         public string quantity { get; set; }
+
+        public Decimal cost { get; set; }
     }
 
 }

@@ -84,6 +84,63 @@ namespace integraAnyMarket
             return feed;
         }
 
+        public void PutFeed(string feedId)
+        {
+            var url = $"{baseUrl}orders/feed/{feedId}?gumgaToken={token}";
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+            httpWebRequest.ContentType = "application/json";
+            httpWebRequest.Method = "PUT";
+
+            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            {
+                string json = "{\"token\":\"TOKEN_FEED\"}";
+
+            streamWriter.Write(json);
+            }
+            try
+            {
+                var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                {
+                    var result = streamReader.ReadToEnd();
+                }
+            }
+            catch (Exception ex)
+            {
+                string msg = ex.Message;
+                Log.Set($"Erro Saldo Produto: {ex.Message}");
+            }
+        }
+
+        public void PutXML(string idOrder, string xml)
+        {
+            var url = $"{baseUrl}orders/{idOrder}?gumgaToken={token}";
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+            httpWebRequest.ContentType = "application/json";
+            httpWebRequest.Method = "PUT";
+
+            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            {
+                string json = "{{" + xml + "}}";
+
+                streamWriter.Write(json);
+            }
+            try
+            {
+                var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                {
+                    var result = streamReader.ReadToEnd();
+                }
+            }
+            catch (Exception ex)
+            {
+                string msg = ex.Message;
+                Log.Set($"Erro Saldo Produto: {ex.Message}");
+            }
+        }
+
+
         public RootOrder GetPedido(string Id)
         {
             string Url = $"{baseUrl}orders/"+Id;
@@ -189,31 +246,34 @@ namespace integraAnyMarket
             return lstPages;
         }
 
-        public void SetStock(List<SetStock> lstSetStock)
+        public bool SetStock(List<SetStock> lstSetStock)
         {
-            var url = $"{baseUrl}stock/?gumgaToken={token}";
-                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
-                httpWebRequest.ContentType = "application/json";
-                httpWebRequest.Method = "PUT";
+            bool ret = true;
+            var url = $"{baseUrl}stocks?gumgaToken={token}";
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+            httpWebRequest.ContentType = "application/json";
+            httpWebRequest.Method = "PUT";
    
-                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
-                {
-                    string json = JsonConvert.SerializeObject(lstSetStock);
+            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            {
+                string json = JsonConvert.SerializeObject(lstSetStock);
 
-                    streamWriter.Write(json);
-                }
-                try
+                streamWriter.Write(json);
+            }
+            try
+            {
+                var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
                 {
-                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-                    using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
-                    {
-                        var result = streamReader.ReadToEnd();
-                    }
-                } catch ( Exception ex)
-                {
-                    string msg = ex.Message;
-                    Log.Set($"Erro Saldo Produto: {ex.Message}");
+                    var result = streamReader.ReadToEnd();
                 }
+            } catch ( Exception ex)
+            {
+                ret = false;
+                string msg = ex.Message;
+                Log.Set($"Erro Saldo Produto: {ex.Message}");
+            }
+            return ret;
         }
 
         public void SetPrice(List<SetStock> lstSetStock)
@@ -244,8 +304,9 @@ namespace integraAnyMarket
             }
         }
 
-        public void SetFaturado(string id_order, AnyFaturados faturado)
+        public bool SetFaturado(string id_order, AnyFaturados faturado)
         {
+            bool ret = true;
             //foreach (SetStock setStock in lstSetStock)
             //{
             var url = $"{baseUrl}orders/{id_order}?gumgaToken={token}";
@@ -269,14 +330,16 @@ namespace integraAnyMarket
             }
             catch (Exception ex)
             {
+                ret = false;
                 string msg = ex.Message;
                 Log.Set($"Erro Set Faturado: {ex.Message}");
             }
-            //}
+            return ret;
         }
 
-        public void SetEnviado(string id_order, AnyTransito transito)
+        public bool SetEnviado(string id_order, AnyTransito transito)
         {
+            bool ret = true;
             var url = $"{baseUrl}orders/{id_order}?gumgaToken={token}";
             var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
             httpWebRequest.ContentType = "application/json";
@@ -298,13 +361,16 @@ namespace integraAnyMarket
             }
             catch (Exception ex)
             {
+                ret = false;
                 string msg = ex.Message;
                 Log.Set($"Erro Set Transito: {ex.Message}");
             }
+            return ret;
         }
 
-        public void SetEntregue(string id_order, AnyEntregue entregue)
+        public bool SetEntregue(string id_order, AnyEntregue entregue)
         {
+            bool ret = true;
             var url = $"{baseUrl}orders/{id_order}?gumgaToken={token}";
             var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
             httpWebRequest.ContentType = "application/json";
@@ -326,9 +392,11 @@ namespace integraAnyMarket
             }
             catch (Exception ex)
             {
+                ret = false;
                 string msg = ex.Message;
                 Log.Set($"Erro Set Entregue: {ex.Message}");
             }
+            return ret;
         }
 
         public void SetConcluido(string id_order, AnyConcluido concluido)
