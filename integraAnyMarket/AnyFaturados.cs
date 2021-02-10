@@ -11,7 +11,7 @@ namespace integraAnyMarket
     {
      //   public string order_id { get; set; }
         public string status { get; set; }
-        public Invoice orderInvoice { get; set; }
+        public Invoice invoice { get; set; }
     }
 
     public class Invoice

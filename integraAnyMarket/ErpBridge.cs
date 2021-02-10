@@ -77,9 +77,11 @@ namespace integraAnyMarket
                 }
                 else
                 {
-                    db.setEnviado(dr["id_nfs01"].ToString(), "400", "erro", "2");
+                    db.setStock(dr["id_nfs01"].ToString(), "400", "erro", "2");
                 }
             }
         }
+
+
     }
 }

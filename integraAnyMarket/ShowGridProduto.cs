@@ -16,6 +16,8 @@ namespace integraAnyMarket
         public string Product { get; set; }
         public String Title { get; set; }
         public Double Price { get; set; }
+        public Double PriceFactor { get; set; }
+        public Double Cost { get; set; }
         public Int32 Amount { get; set; }
 
        

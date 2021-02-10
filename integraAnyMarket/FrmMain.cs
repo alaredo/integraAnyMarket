@@ -47,7 +47,7 @@ namespace integraAnyMarket
                 invoice.accessKey = dr["ACCESSKEY"].ToString();
                 invoice.cfop = dr["cd_cfop"].ToString();
                 invoice.companyStateTaxId = dr["cd_ie"].ToString();
-                faturado.orderInvoice = invoice;
+                faturado.invoice = invoice;
 
                 AnyMarket anyMarket = new AnyMarket();
                 if ( anyMarket.SetFaturado(dr["order_id"].ToString(), faturado))
@@ -201,6 +201,8 @@ namespace integraAnyMarket
                     fieldsProduto.Title = sku.title;
                     fieldsProduto.Price = sku.price;
                     fieldsProduto.Amount = sku.amount;
+                    fieldsProduto.PriceFactor = p.priceFactor;
+                    fieldsProduto.Cost = sku.price / p.priceFactor;
                     lstProdutosFormatados.Add(fieldsProduto);
                 }
 

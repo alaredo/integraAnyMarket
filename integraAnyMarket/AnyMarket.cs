@@ -24,6 +24,10 @@ namespace integraAnyMarket
         {
             token = token_sandBox;
             baseUrl = baseUrl_sandBox;
+
+            //token = token_oficial;
+            //baseUrl = baseUrl_oficial;
+
         }
 
         public RootProduto GetProdutos()

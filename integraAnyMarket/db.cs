@@ -503,6 +503,15 @@ namespace integraAnyMarket
                 if (entrega.comment == null)
                     entrega.comment = "";
 
+                string complemento_aux = "";
+
+                if ( entrega.comment.IndexOf("referência") > -1)
+                {
+                    complemento_aux = entrega.comment;
+                    entrega.comment = "";
+                }
+                
+
                 Anymarketaddress cobranca = order.anymarketAddress;
 
                 BuscaVendedor(order);
@@ -596,7 +605,7 @@ namespace integraAnyMarket
 
                 string idPedido = cadastraOrcamento(order, cmd);
                 CadastraItemOrcamento(order, idPedido, cmd);
-                setObservacao(idPedido, order.marketPlaceNumber, order, cmd);
+                setObservacao(idPedido, order.marketPlaceNumber, order, cmd, complemento_aux);
 
 
                 myTrans.Commit();
@@ -886,7 +895,7 @@ namespace integraAnyMarket
 
         }
 
-        private void setObservacao(string id_pedido, string pedidoMktPlace, Order order, OracleCommand cmd)
+        private void setObservacao(string id_pedido, string pedidoMktPlace, Order order, OracleCommand cmd, string linha4)
         {
             cmd.Parameters.Clear();
             cmd.CommandText = "SP_COM_PEDS04_INS";
@@ -895,7 +904,7 @@ namespace integraAnyMarket
             addParameter("p_ds_Linha01", OracleType.VarChar, 30, "", cmd);
             addParameter("p_ds_Linha02", OracleType.VarChar, 30, $"Número Pedido...: {pedidoMktPlace}", cmd);
             addParameter("p_ds_Linha03", OracleType.VarChar, 30, "", cmd);
-            addParameter("p_ds_Linha04", OracleType.VarChar, 30, "", cmd);
+            addParameter("p_ds_Linha04", OracleType.VarChar, 30, linha4, cmd);
             addParameter("p_Usuario", OracleType.VarChar, 20, "pedidoWeb", cmd);
             cmd.ExecuteNonQuery();
 
