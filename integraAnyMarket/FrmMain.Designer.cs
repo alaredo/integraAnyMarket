@@ -62,6 +62,7 @@
             this.button4 = new System.Windows.Forms.Button();
             this.label6 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.panel1.SuspendLayout();
             this.panel3.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -75,6 +76,7 @@
             // 
             this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
+            this.panel1.Controls.Add(this.checkBox1);
             this.panel1.Controls.Add(this.label8);
             this.panel1.Controls.Add(this.panel3);
             this.panel1.Controls.Add(this.label2);
@@ -106,7 +108,7 @@
             this.panel3.Controls.Add(this.cmdPed1);
             this.panel3.Location = new System.Drawing.Point(10, 260);
             this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(126, 133);
+            this.panel3.Size = new System.Drawing.Size(126, 137);
             this.panel3.TabIndex = 4;
             // 
             // button5
@@ -416,6 +418,17 @@
             this.label7.TabIndex = 11;
             this.label7.Text = "Mkp";
             // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(15, 452);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(60, 17);
+            this.checkBox1.TabIndex = 4;
+            this.checkBox1.Text = "Repetir";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
+            // 
             // FrmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -486,5 +499,6 @@
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Button button6;
         private System.Windows.Forms.RadioButton radioButton3;
+        private System.Windows.Forms.CheckBox checkBox1;
     }
 }

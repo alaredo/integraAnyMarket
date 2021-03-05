@@ -27,7 +27,10 @@ namespace integraAnyMarket
                         Db db = new Db();
                         if (db.ProcessaPedido(o))
                         {
-                            anyMarket.PutFeed(f.id.ToString());
+                            anyMarket.PutFeed(f.id.ToString(), f.token);
+                        } else
+                        {
+                            // anyMarket.PutFeed(f.id.ToString(), f.token);
                         }
                     }
                 }

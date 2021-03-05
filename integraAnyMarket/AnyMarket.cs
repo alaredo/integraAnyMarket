@@ -25,8 +25,8 @@ namespace integraAnyMarket
             token = token_sandBox;
             baseUrl = baseUrl_sandBox;
 
-            //token = token_oficial;
-            //baseUrl = baseUrl_oficial;
+          //  token = token_oficial;
+          //  baseUrl = baseUrl_oficial;
 
         }
 
@@ -63,7 +63,7 @@ namespace integraAnyMarket
         public AnyFeed GetFeed()
         {
             AnyFeed feed = new AnyFeed();
-            var url = baseUrl + "orders/feeds";
+            var url = baseUrl + "orders/feeds?status=PAID_WAITING_SHIP";
             var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
             httpWebRequest.Headers.Add("gumgaToken", token);
             httpWebRequest.ContentType = "application/json";
@@ -88,16 +88,16 @@ namespace integraAnyMarket
             return feed;
         }
 
-        public void PutFeed(string feedId)
+        public void PutFeed(string feedId, string tokenFeed)
         {
-            var url = $"{baseUrl}orders/feed/{feedId}?gumgaToken={token}";
+            var url = $"{baseUrl}orders/feeds/{feedId}?gumgaToken={token}";
             var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
             httpWebRequest.ContentType = "application/json";
             httpWebRequest.Method = "PUT";
 
             using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
             {
-                string json = "{\"token\":\"TOKEN_FEED\"}";
+                string json = "{\"token\": \"" + tokenFeed + "\"}";
 
             streamWriter.Write(json);
             }
@@ -147,7 +147,7 @@ namespace integraAnyMarket
 
         public RootOrder GetPedido(string Id)
         {
-            string Url = $"{baseUrl}orders/"+Id;
+            string Url = $"{baseUrl}orders/"+Id+"?status=PAID_WAITING_SHIP";
             return GetPedidos(Url, true);
         }
 
@@ -181,7 +181,6 @@ namespace integraAnyMarket
                         Order order = JsonConvert.DeserializeObject<Order>(result);
                         root.orders = new List<Order>();
                         root.orders.Add(order);
-                        
                     }
 
                     lstPages.Add(root);

@@ -6,6 +6,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -25,52 +26,7 @@ namespace integraAnyMarket
 
         private void Button4_Click(object sender, EventArgs e)
         {
-            label3.Text = "Pedidos Faturados";
-            dataGridView1.DataSource = null;
-
-            this.Cursor = Cursors.WaitCursor;
-            Db db = new Db();
-            DataTable dt = db.LoadFaturados();
-            
-            foreach (DataRow dr in dt.Rows)
-            {
-                Invoice invoice = new Invoice();
-                //b.id_ANY AS ORDER_ID, 'INVOICED' AS STATUS, a.cd_Serie AS SERIES, a.cd_NF AS NUMBER, cd_Chave AS ACCESSKEY, 1, a.data
-                 
-                AnyFaturados faturado = new AnyFaturados();
-                // faturado.order_id = dr["ORDER_ID"].ToString();
-
-                faturado.status = "INVOICED";
-                invoice.number = dr["NUMBERO"].ToString();
-                invoice.series = dr["SERIES"].ToString();
-                invoice.date = dr["data"].ToString();
-                invoice.accessKey = dr["ACCESSKEY"].ToString();
-                invoice.cfop = dr["cd_cfop"].ToString();
-                invoice.companyStateTaxId = dr["cd_ie"].ToString();
-                faturado.invoice = invoice;
-
-                AnyMarket anyMarket = new AnyMarket();
-                if ( anyMarket.SetFaturado(dr["order_id"].ToString(), faturado))
-                {
-                    if (dr["ds_xml"].ToString() != "")
-                    {
-                        anyMarket.PutXML(dr["ds_xml"].ToString(), dr["ds_xml"].ToString());
-                    } else {
-                        String xml = getXmlStr(dr["ACCESSKEY"].ToString() + "-procNFe.xml");
-                        if (xml != "")
-                        {
-                            anyMarket.PutXML(dr["order_id"].ToString(), xml);
-                        }
-                    }
-                    db.setFaturado(dr["id_nfs01"].ToString(), "200", "sucesso", "1");
-                } else
-                {
-                    db.setFaturado(dr["id_nfs01"].ToString(), "400", "erro", "2");
-                }
-            }
-            dataGridView1.DataSource = dt;
-            this.Cursor = Cursors.Default;
-
+            Faturados();
         }
 
         private String getXmlStr(string name)
@@ -78,7 +34,7 @@ namespace integraAnyMarket
             String ret = "";
             try
             {
-                string[] lines = System.IO.File.ReadAllLines(@"C:\sideErp\xmlp\" + name);
+                string[] lines = System.IO.File.ReadAllLines(@"C:\SideErp\XML\" + name);
                 foreach (string line in lines)
                 {
                     // Use a tab to indent each line of the file.
@@ -213,34 +169,100 @@ namespace integraAnyMarket
 
         }
 
-        private void CmdPed1_Click(object sender, EventArgs e)
+        private void Pago_Thread()
         {
-            label3.Text = "Pedidos Pagos";
-            dataGridView1.DataSource = null;
-
-            this.Cursor = Cursors.WaitCursor;
             ErpBridge erpBridge = new ErpBridge();
             erpBridge.processaPedido();
-
-            this.Cursor = Cursors.Default;
-
-            Search();
         }
 
-        private void CmdProd3_Click(object sender, EventArgs e)
+        private void Faturado_Thread()
         {
-            label3.Text = "Atualizar Estoque";
-            ErpBridge erpBridge = new ErpBridge();
-            erpBridge.processaEstoque();
+            Db db = new Db();
+            DataTable dt = db.LoadFaturados();
 
+            foreach (DataRow dr in dt.Rows)
+            {
+                Invoice invoice = new Invoice();
+                //b.id_ANY AS ORDER_ID, 'INVOICED' AS STATUS, a.cd_Serie AS SERIES, a.cd_NF AS NUMBER, cd_Chave AS ACCESSKEY, 1, a.data
+
+                AnyMarket anyMarket = new AnyMarket();
+                if (dr["id_psp"].ToString() != "5")
+                {
+                    AnyFaturados faturado = new AnyFaturados();
+                    // faturado.order_id = dr["ORDER_ID"].ToString();
+
+                    faturado.status = "INVOICED";
+                    invoice.number = dr["NUMBERO"].ToString();
+                    invoice.series = dr["SERIES"].ToString();
+                    invoice.date = dr["data"].ToString();
+                    invoice.accessKey = dr["ACCESSKEY"].ToString();
+                    invoice.cfop = dr["cd_cfop"].ToString();
+                    invoice.companyStateTaxId = dr["cd_ie"].ToString();
+                    faturado.invoice = invoice;
+
+                    if ( anyMarket.SetFaturado(dr["order_id"].ToString(), faturado) )
+                    {
+                        db.setFaturado(dr["id_nfs01"].ToString(), "200", "sucesso", "1");
+                    } else
+                    {
+                        db.setFaturado(dr["id_nfs01"].ToString(), "400", "erro", "2");
+                    } 
+
+                } else
+                {
+                    if (dr["ds_xml"].ToString() != "")
+                    {
+                        anyMarket.PutXML(dr["ds_xml"].ToString(), dr["ds_xml"].ToString());
+                    }
+                    else
+                    {
+                        try
+                        {
+                            String xml = getXmlStr(dr["ACCESSKEY"].ToString() + "-procNFe.xml");
+                            if (xml != "")
+                            {
+                                anyMarket.PutXML(dr["order_id"].ToString(), xml);
+                                db.setFaturado(dr["id_nfs01"].ToString(), "200", "sucesso", "1");
+                            } else
+                            {
+                                db.setFaturado(dr["id_nfs01"].ToString(), "400", "erro - xml nao encontrado", "0");
+                            }
+                            
+                        } catch (Exception ex)
+                        {
+                            Log.Set("Erro no envio do xml " + ex.Message);
+                        }
+                    }
+                }
+
+                /*
+                AnyMarket anyMarket = new AnyMarket();
+                if (anyMarket.SetFaturado(dr["order_id"].ToString(), faturado))
+                {
+                    if (dr["ds_xml"].ToString() != "")
+                    {
+                        anyMarket.PutXML(dr["ds_xml"].ToString(), dr["ds_xml"].ToString());
+                    }
+                    else
+                    {
+                        String xml = getXmlStr(dr["ACCESSKEY"].ToString() + "-procNFe.xml");
+                        if (xml != "")
+                        {
+                            anyMarket.PutXML(dr["order_id"].ToString(), xml);
+                        }
+                    }
+                    db.setFaturado(dr["id_nfs01"].ToString(), "200", "sucesso", "1");
+                }
+                else
+                {
+                    db.setFaturado(dr["id_nfs01"].ToString(), "400", "erro", "2");
+                }
+                */
+            }
         }
 
-        private void Button3_Click(object sender, EventArgs e) 
+        private void Enviado_Thread()
         {
-            label3.Text = "Pedidos Enviados";
-            dataGridView1.DataSource = null;
-
-            this.Cursor = Cursors.WaitCursor;
             Db db = new Db();
             DataTable dt = db.LoadEnviados();
 
@@ -266,22 +288,18 @@ namespace integraAnyMarket
                 if (anyMarket.SetEnviado(transito.order_id, transito))
                 {
                     db.setEnviado(dr["id_nfs01"].ToString(), "200", "sucesso", "1");
-                } else
+                }
+                else
                 {
                     db.setEnviado(dr["id_nfs01"].ToString(), "400", "erro", "2");
                 }
-               
+
             }
-            dataGridView1.DataSource = dt;
-            this.Cursor = Cursors.Default;
         }
 
-        private void Button5_Click(object sender, EventArgs e)
-        {
-            label3.Text = "Pedidos Entregues";
-            dataGridView1.DataSource = null;
 
-            this.Cursor = Cursors.WaitCursor;
+        private void Entregue_Thread()
+        {
             Db db = new Db();
             DataTable dt = db.LoadEntregues();
 
@@ -308,8 +326,90 @@ namespace integraAnyMarket
                 }
 
             }
-            dataGridView1.DataSource = dt;
+        }
+
+        private void Estoque_Thread()
+        {
+            ErpBridge erpBridge = new ErpBridge();
+            erpBridge.processaEstoque();
+        }
+
+        private void Pagos()
+        {
+            label3.Text = "Pedidos Pagos";
+            dataGridView1.DataSource = null;
+
+            this.Cursor = Cursors.WaitCursor;
+            Pago_Thread();
             this.Cursor = Cursors.Default;
+
+            Search();
+        }
+
+        private void Faturados()
+        {
+            label3.Text = "Pedidos Faturados";
+            dataGridView1.DataSource = null;
+
+            this.Cursor = Cursors.WaitCursor;
+            Faturado_Thread();
+            Search();
+            this.Cursor = Cursors.Default;
+
+        }
+
+        private void Enviados()
+        {
+            label3.Text = "Pedidos Enviados";
+            dataGridView1.DataSource = null;
+
+            this.Cursor = Cursors.WaitCursor;
+            Enviado_Thread();
+            Search();
+            this.Cursor = Cursors.Default;
+
+        }
+
+        private void Entregues()
+        {
+            label3.Text = "Pedidos Entregues";
+            dataGridView1.DataSource = null;
+
+            this.Cursor = Cursors.WaitCursor;
+            Entregue_Thread();
+            Search();
+            this.Cursor = Cursors.Default;
+        }
+
+        private void Estoque()
+        {
+            label3.Text = "Atualizar Estoque";
+            Estoque_Thread();
+            Search();
+        }
+
+
+        
+
+        private void CmdPed1_Click(object sender, EventArgs e)
+        {
+            Pagos();
+        }
+
+        private void CmdProd3_Click(object sender, EventArgs e)
+        {
+            Estoque();
+
+        }
+
+        private void Button3_Click(object sender, EventArgs e) 
+        {
+            Enviados();
+        }
+
+        private void Button5_Click(object sender, EventArgs e)
+        {
+            Entregues();
         }
 
         private void button7_Click(object sender, EventArgs e)
@@ -331,6 +431,58 @@ namespace integraAnyMarket
         private void radioButton3_CheckedChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private Thread thread;
+        bool looping;
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBox1.Checked)
+            {
+                cmdPed1.Enabled = false;
+                cmd.Enabled = false;
+                button3.Enabled = false;
+                button5.Enabled = false;
+
+                looping = true;
+
+                thread = new Thread(() =>
+                {
+                    while (looping)
+                    {
+                        Pago_Thread();
+                        
+                        if (!looping)
+                            break;
+                        Faturado_Thread();
+                        
+                        if (!looping)
+                            break;
+                        Enviado_Thread();
+                        
+                        if (!looping)
+                            break;
+                        Entregue_Thread();
+                        
+                        if (!looping)
+                            break;
+                        Estoque_Thread();
+                    }
+                    string str = "saindo";
+                });
+
+                thread.Start();
+
+            } else {
+                cmdPed1.Enabled = true;
+                cmd.Enabled = true;
+                button3.Enabled = true;
+                button5.Enabled = true;
+
+                looping = false;
+                
+            }
+            
         }
     }
 }

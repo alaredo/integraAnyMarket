@@ -26,57 +26,18 @@ namespace integraAnyMarket
         public void InsertItem(OracleCommand cmd)
         {
             cmd.Parameters.Clear();
-            cmd.CommandText = "SP_COM_PEDS02_WEB";
+            cmd.CommandText = "SP_API_PEDS02_WEB";
             cmd.CommandType = CommandType.StoredProcedure;
-            var retval = new OracleParameter("P_ID_PS02", OracleType.Double, 22);
-            retval.Direction = ParameterDirection.InputOutput;
-            cmd.Parameters.Add(retval);
-            addParameter("P_ID_PEDIDO", OracleType.VarChar, 9, id_pedido, cmd);
-            addParameter("P_ID_PRODUTO", OracleType.VarChar, 30, id_produto, cmd);
-            addParameter("P_ID_EMPRESA", OracleType.Double, 2, 1, cmd);
-            addParameter("P_DS_PRODUTO", OracleType.VarChar, 200, ds_produto, cmd);
-            addParameter("P_DS_UNIDADE", OracleType.VarChar, 3, ds_unidade, cmd);
-            addParameter("P_QT_PEDIDA", OracleType.VarChar, 9, qt_pedida, cmd);
-            addParameter("P_QT_SDFAT", OracleType.VarChar, 9, qt_sdfat, cmd);
-            addParameter("P_VL_PREVENU", OracleType.VarChar, 32, vl_prevenu, cmd);
-            addParameter("P_VL_PREVENT", OracleType.VarChar, 30, vl_prevent, cmd);
-            addParameter("P_VL_PREFAB", OracleType.VarChar, 32, vl_prefab, cmd);
-            addParameter("P_VL_ALICMS", OracleType.VarChar, 30, vl_alicms, cmd);
-            addParameter("P_VL_BASEICMS", OracleType.VarChar, 30, vl_baseicms, cmd);
-            addParameter("P_VL_REDB", OracleType.VarChar, 30, vl_redb, cmd);
-            addParameter("P_VL_ICMS", OracleType.VarChar, 30, vl_icms, cmd);
-            addParameter("P_VL_ALIPI", OracleType.VarChar, 30, vl_Alipi, cmd);
-            addParameter("P_VL_BASEIPI", OracleType.VarChar, 30, vl_baseipi, cmd);
-            addParameter("P_VL_IPI", OracleType.VarChar, 30, vl_ipi, cmd);
-            addParameter("P_VL_COM", OracleType.VarChar, 30, vl_com, cmd);
-            addParameter("P_VL_OVER", OracleType.VarChar, 30, vl_over, cmd);
-            addParameter("P_VL_CP", OracleType.VarChar, 30, vl_cp, cmd);
-            addParameter("P_VL_DESC", OracleType.VarChar, 30, vl_desc, cmd);
-            addParameter("P_VL_ACRE", OracleType.VarChar, 30, vl_acre, cmd);
-            addParameter("P_VL_PESO", OracleType.VarChar, 30, vl_peso, cmd);
-            addParameter("P_ID_VINCULO", OracleType.VarChar, 30, id_vinculo, cmd);
-            addParameter("P_VL_BASEST", OracleType.Double, 15, Convert.ToDouble(vl_basest), cmd);
-            addParameter("P_VL_ST", OracleType.Double, 15, Convert.ToDouble(vl_st), cmd);
-            addParameter("P_VL_MVA", OracleType.Double, 9, Convert.ToDouble(vl_mva), cmd);
-            addParameter("P_VL_DEFERE", OracleType.Double, 15, Convert.ToDouble(vl_defere), cmd);
-            addParameter("P_VL_STCRED", OracleType.Double, 15, Convert.ToDouble(vl_stcred), cmd);
-            addParameter("P_CD_ORG", OracleType.VarChar, 1, cd_org, cmd);
-            addParameter("P_VL_FRETE", OracleType.VarChar, 1, vl_frete, cmd);
-            addParameter("P_CD_CHECK", OracleType.Double, 1, 0, cmd);
-            addParameter("P_CD_CEST", OracleType.Double, 1, 0, cmd);
-            addParameter("P_VL_BASEICMSDEST", OracleType.Double, 1, 0, cmd);
-            addParameter("P_VL_ALICMSINTDEST", OracleType.Double, 1, 0, cmd);
-            addParameter("P_VL_ALICMSINTER", OracleType.Double, 1, 0, cmd);
-            addParameter("P_VL_ALICMSPART", OracleType.Double, 1, 0, cmd);
-            addParameter("P_VL_ALICMSFCP", OracleType.Double, 1, 0, cmd);
-            addParameter("P_VL_ICMSDEST", OracleType.Double, 1, 0, cmd);
-            addParameter("P_VL_ICMSREM", OracleType.Double, 1, 0, cmd);
-            addParameter("P_VL_ICMSFCP", OracleType.Double, 1, 0, cmd);
-            addParameter("P_VL_OD", OracleType.Double, 1, 0, cmd);
+            addParameter("P_ID_PEDIDO", OracleType.VarChar, 15, id_pedido, cmd);
+            addParameter("P_ID_PRODUTO", OracleType.VarChar, 15, id_produto, cmd);
+            addParameter("P_ID_EMPRESA", OracleType.VarChar, 15, 1, cmd);
+            addParameter("P_QT_PEDIDA", OracleType.VarChar, 14, qt_pedida, cmd);
+            addParameter("P_VL_PREVENU", OracleType.VarChar, 10, vl_prevenu, cmd);
+            addParameter("P_VL_PREVENT", OracleType.VarChar, 15, vl_prevent, cmd);
+            addParameter("P_VL_FRETE", OracleType.VarChar, 15, vl_frete, cmd);
             addParameter("P_CD_PRODUTO", OracleType.VarChar, 20, cd_produto, cmd);
 
             cmd.ExecuteNonQuery();
-            id_ps02 = Convert.ToInt32(retval.Value);
         }
 
         

@@ -75,7 +75,7 @@ namespace integraAnyMarket
             bool ret = true;
             try
             {
-                string queryString = @"SELECT b.id_ANY AS ORDER_ID, 'INVOICED' AS STATUS, a.cd_Serie AS SERIES, a.cd_NF AS NUMBERO, cd_Chave AS ACCESSKEY, 1, to_Char(a.data, 'YYYY-MM-DD') || 'T' || to_Char(a.data, 'HH24:MI:SS') || 'Z' as data, a.id_NFS01, c.cd_cfop, c.ds_xml, c.cd_ie
+                string queryString = @"SELECT b.id_ANY AS ORDER_ID, 'INVOICED' AS STATUS, a.cd_Serie AS SERIES, a.cd_NF AS NUMBERO, cd_Chave AS ACCESSKEY, 1, to_Char(a.data, 'YYYY-MM-DD') || 'T' || to_Char(a.data, 'HH24:MI:SS') || 'Z' as data, a.id_NFS01, c.cd_cfop, c.ds_xml, c.cd_ie, b.id_psp
                                         FROM tb_NFS01 a, tb_PS01 b, tb_APIFat c
                                         WHERE a.id_Pedido = b.id_Pedido
                                         AND a.id_NFS01 = c.id_NFS01
@@ -995,7 +995,7 @@ namespace integraAnyMarket
             pedidoBel.tp_frete = 1;
             pedidoBel.cd_titulo = 1;
             pedidoBel.ret_iss = 0;
-            pedidoBel.cd_preco = 0;
+            pedidoBel.cd_preco = 1;
             pedidoBel.usuario = "PedidoWeb";
             pedidoBel.id_localidade = id_localidade;
 
@@ -1011,7 +1011,7 @@ namespace integraAnyMarket
             pedidoBel.cd_CEP = entrega.zipCode;
             pedidoBel.vl_total = pedido.total;
             pedidoBel.vl_produtos = pedido.gross;
-            pedidoBel.vl_servicos = pedido.freight;
+            pedidoBel.vl_servicos = 0;
 
             pedidoBel.vl_baseICMS = 0;
             pedidoBel.vl_ICMS = 0;
